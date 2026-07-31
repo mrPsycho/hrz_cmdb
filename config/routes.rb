@@ -23,6 +23,13 @@ Rails.application.routes.draw do
     collection do
       get 'tree_data'
       get 'info'
+      # REST API collection endpoints, only rendered for the .json and .xml formats.
+      # The web interface navigates the same data through tree_data instead.
+      get 'locations', action: :index_locations
+      get 'ci_classes', action: :index_ci_classes
+      get 'cis', action: :index_cis
+      get 'lifecycle_statuses', action: :index_lifecycle_statuses
+      get 'external_systems', action: :index_ext_systems
       get 'new_location', action: :new_location
       get 'location/:id', action: :show_location, as: :show_location
       post 'location', action: :create_location
@@ -69,6 +76,6 @@ Rails.application.routes.draw do
   # CI-Issue integration routes
   resources :issues, only: [] do
     get 'cis/available', to: 'issue_cis#available_cis', as: :available_cis
-    resources :cis, controller: 'issue_cis', only: [:create, :destroy]
+    resources :cis, controller: 'issue_cis', only: [:index, :create, :destroy]
   end
 end

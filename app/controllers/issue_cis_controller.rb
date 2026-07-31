@@ -17,14 +17,34 @@
 #          Handles linking/unlinking CIs to issues and provides available CIs for selection.
 
 class IssueCisController < ApplicationController
+  # Actions reachable through the Redmine REST API (API key or HTTP basic auth).
+  # Authentication only. Authorisation stays with the authorize before_action below.
+  accept_api_auth :index, :create, :destroy
+
+  helper :cmdb
+
   before_action :find_issue
   before_action :check_module_enabled
   before_action :authorize
 
+  # Lists the CIs linked to an issue.
+  # Parameter issue_id (via params): Integer ID of the issue (set by find_issue)
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @cis, @cis_count, @offset, @limit
+  # Returns: index.api.rsb rendering of the paginated collection, 406 for non API formats
+  def index
+    scope = @issue.cis.ordered_by_abbr
+
+    @offset, @limit = api_offset_and_limit
+    @cis_count = scope.count
+    @cis = scope.includes(:ci_class, :location, :lifecycle_status).limit(@limit).offset(@offset).to_a
+  end
+
   # Creates a new CI-Issue association and logs it in the issue history.
   # Parameter ci_id (via params): Integer ID of the CI to link to the issue
   # Parameter issue_id (via params): Integer ID of the issue (set by find_issue)
-  # Returns: JSON with success status and rendered CI row HTML, or error messages
+  # Returns: 201 with show.api.rsb for .json/.xml requests, 422 with the validation errors on
+  #          failure, 404 if the CI does not exist, otherwise the UI JSON envelope with the CI row HTML
   def create
     @ci = HrzcmCi.find(params[:ci_id])
     @ci_issue = HrzcmCiIssue.new(ci_id: @ci.id, issue_id: @issue.id)
@@ -40,6 +60,8 @@ class IssueCisController < ApplicationController
       )
       journal.save
 
+      return render(:action => 'show', :status => :created) if api_request?
+
       # Render the partial as a string without layout
       html = render_to_string(partial: 'issue_cis/ci_row', locals: { ci: @ci, issue: @issue }, layout: false)
 
@@ -49,17 +71,22 @@ class IssueCisController < ApplicationController
         notice: l(:notice_ci_added)
       }
     else
+      return render_validation_errors(@ci_issue) if api_request?
+
       render json: {
         success: false,
         errors: @ci_issue.errors.full_messages
       }
     end
+  rescue ActiveRecord::RecordNotFound
+    render_404
   end
 
   # Removes a CI-Issue association and logs the removal in the issue history.
   # Parameter id (via params): Integer ID of the CI to unlink from the issue
   # Parameter issue_id (via params): Integer ID of the issue (set by find_issue)
-  # Returns: JSON with success status or error messages
+  # Returns: 204 for .json/.xml requests, 404 if the association does not exist,
+  #          otherwise the UI JSON envelope
   def destroy
     @ci_issue = HrzcmCiIssue.find_by(ci_id: params[:id], issue_id: @issue.id)
     @ci = HrzcmCi.find_by(id: params[:id])
@@ -75,8 +102,12 @@ class IssueCisController < ApplicationController
       )
       journal.save
 
+      return render_api_ok if api_request?
+
       render json: { success: true, notice: l(:notice_ci_removed) }
     else
+      return render_404 if api_request?
+
       render json: { success: false, errors: [l(:error_ci_not_found)] }
     end
   end
@@ -118,11 +149,13 @@ class IssueCisController < ApplicationController
 
   # Finds and loads an issue by ID from params.
   # Called as before_action for all controller actions.
+  # Only issues the current user is allowed to see are found, so the REST API cannot be used
+  # to read or modify CI links of an issue that is invisible to the caller.
   # Parameter issue_id (via params): Integer ID of the issue to find
   # Sets: @issue and @project instance variables
-  # Raises: Renders 404 if issue not found
+  # Raises: Renders 404 if the issue does not exist or is not visible to the current user
   def find_issue
-    @issue = Issue.find(params[:issue_id])
+    @issue = Issue.visible.find(params[:issue_id])
     @project = @issue.project
   rescue ActiveRecord::RecordNotFound
     render_404
@@ -142,12 +175,13 @@ class IssueCisController < ApplicationController
   # Checks user permissions based on the action being performed.
   # Called as before_action for all controller actions.
   # Permission requirements:
+  #   * index action ............ requires view_issue_cis permission
   #   * available_cis action .... requires view_issue_cis permission
   #   * create/destroy actions ... requires manage_issue_cis permission
   # Returns: false and denies access if user lacks required permission
   def authorize
-    # For available_cis action, check view_issue_cis permission
-    if action_name == 'available_cis'
+    # For read-only actions, check view_issue_cis permission
+    if %w[index available_cis].include?(action_name)
       unless User.current.allowed_to?(:view_issue_cis, @project)
         deny_access
         return false

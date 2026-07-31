@@ -17,6 +17,15 @@
 #          Provides the jsTree data endpoint and enforces group-based permissions for all CMDB entities.
 
 class CmdbController < ApplicationController
+  # Actions reachable through the Redmine REST API (API key or HTTP basic auth).
+  # Authentication only. Authorisation still comes from the before_action permission checks below.
+  accept_api_auth :index_locations, :show_location, :create_location, :update_location, :destroy_location,
+                  :index_ci_classes, :show_ci_class, :create_ci_class, :update_ci_class, :destroy_ci_class,
+                  :index_cis, :show_ci, :create_ci, :update_ci, :destroy_ci,
+                  :index_lifecycle_statuses, :show_lifecycle_status, :create_lifecycle_status,
+                  :update_lifecycle_status, :destroy_lifecycle_status,
+                  :index_ext_systems, :show_ext_sys, :create_ext_sys, :update_ext_sys, :destroy_ext_sys
+
   before_action :check_permissions
   before_action :find_location, only: [:show_location, :update_location, :destroy_location]
   before_action :find_ci_class, only: [:show_ci_class, :update_ci_class, :destroy_ci_class]
@@ -52,6 +61,81 @@ class CmdbController < ApplicationController
     @locations_count = HrzcmLocation.count
 
     render partial: 'cmdb/info'
+  end
+
+  # Lists locations for the REST API, newest Redmine pagination conventions apply.
+  # Only reachable with .json or .xml, other formats are answered with 406 by Rails.
+  # Parameter j_type_id (via params): Integer hierarchy level ID, optional filter
+  # Parameter j_part_of1_id (via params): Integer parent location ID, optional filter
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @locations, @locations_count, @offset, @limit
+  # Returns: index_locations.api.rsb rendering of the paginated collection
+  def index_locations
+    scope = HrzcmLocation.ordered_by_b_name_abbr
+    scope = scope.for_type(params[:j_type_id].to_i) if params[:j_type_id].present?
+    scope = scope.where(j_part_of1_id: params[:j_part_of1_id].to_i) if params[:j_part_of1_id].present?
+
+    @offset, @limit = api_offset_and_limit
+    @locations_count = scope.count
+    @locations = scope.limit(@limit).offset(@offset).to_a
+  end
+
+  # Lists CI classes for the REST API.
+  # Parameter j_subclass_of_id (via params): Integer parent CI class ID, optional filter
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @ci_classes, @ci_classes_count, @offset, @limit
+  # Returns: index_ci_classes.api.rsb rendering of the paginated collection
+  def index_ci_classes
+    scope = HrzcmCiClass.ordered_by_sort_and_abbr
+    scope = scope.for_parent(params[:j_subclass_of_id].to_i) if params[:j_subclass_of_id].present?
+
+    @offset, @limit = api_offset_and_limit
+    @ci_classes_count = scope.count
+    @ci_classes = scope.limit(@limit).offset(@offset).to_a
+  end
+
+  # Lists configuration items for the REST API.
+  # Parameter j_ci_class_id (via params): Integer CI class ID, optional filter
+  # Parameter j_location_id (via params): Integer location ID, optional filter
+  # Parameter j_status_id (via params): Integer lifecycle status ID, optional filter
+  # Parameter b_tag_serial (via params): String serial number, optional exact match filter
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @cis, @cis_count, @offset, @limit
+  # Returns: index_cis.api.rsb rendering of the paginated collection
+  def index_cis
+    scope = HrzcmCi.ordered_by_abbr
+    scope = scope.for_ci_class(params[:j_ci_class_id].to_i) if params[:j_ci_class_id].present?
+    scope = scope.for_location(params[:j_location_id].to_i) if params[:j_location_id].present?
+    scope = scope.where(j_status_id: params[:j_status_id].to_i) if params[:j_status_id].present?
+    scope = scope.where(b_tag_serial: params[:b_tag_serial].to_s) if params[:b_tag_serial].present?
+
+    @offset, @limit = api_offset_and_limit
+    @cis_count = scope.count
+    @cis = scope.includes(:ci_class, :location, :lifecycle_status).limit(@limit).offset(@offset).to_a
+  end
+
+  # Lists lifecycle statuses for the REST API.
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @lifecycle_statuses, @lifecycle_statuses_count, @offset, @limit
+  # Returns: index_lifecycle_statuses.api.rsb rendering of the paginated collection
+  def index_lifecycle_statuses
+    scope = HrzcmLifecycleStatus.ordered_by_abbr
+
+    @offset, @limit = api_offset_and_limit
+    @lifecycle_statuses_count = scope.count
+    @lifecycle_statuses = scope.limit(@limit).offset(@offset).to_a
+  end
+
+  # Lists external systems for the REST API.
+  # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
+  # Sets: @ext_systems, @ext_systems_count, @offset, @limit
+  # Returns: index_ext_systems.api.rsb rendering of the paginated collection
+  def index_ext_systems
+    scope = HrzcmExtSys.ordered_by_abbr
+
+    @offset, @limit = api_offset_and_limit
+    @ext_systems_count = scope.count
+    @ext_systems = scope.limit(@limit).offset(@offset).to_a
   end
 
 
@@ -326,8 +410,10 @@ class CmdbController < ApplicationController
 
   # Shows details of a specific location.
   # Uses @location instance variable set by find_location before_action.
-  # Returns: HTML partial or JSON representation
+  # Returns: show_location.api.rsb for .json/.xml requests, otherwise HTML partial or plain JSON
   def show_location
+    return render(:action => 'show_location') if api_request?
+
     respond_to do |format|
       format.html { render partial: 'location_details', locals: { location: @location, can_edit: can_edit? } }
       format.json { render json: @location }
@@ -341,19 +427,28 @@ class CmdbController < ApplicationController
     render partial: 'location_form', locals: { location: @location, can_edit: can_edit? }
   end
 
-  # Creates a new location from form parameters.
+  # Creates a new location from form or API parameters.
   # Parameter location (via params): Hash with location attributes
-  # Returns: JSON with success status and created location ID, or error messages
+  # Returns: 201 with show_location.api.rsb and a Location header for .json/.xml requests,
+  #          422 with the validation errors on failure, otherwise the UI JSON envelope
   def create_location
     @location = HrzcmLocation.new(location_params)
 
     if @location.save
-      render json: {
-        success: true,
-        id: @location.id,
-        notice: I18n.t('hrz_cmdb.locations.created')
-      }
+      if api_request?
+        render :action => 'show_location', :status => :created,
+               :location => url_for(:controller => 'cmdb', :action => 'show_location',
+                                    :id => @location.id, :format => params[:format], :only_path => false)
+      else
+        render json: {
+          success: true,
+          id: @location.id,
+          notice: I18n.t('hrz_cmdb.locations.created')
+        }
+      end
     else
+      return render_validation_errors(@location) if api_request?
+
       render json: { success: false, errors: @location.errors.full_messages }
     end
   end
@@ -361,37 +456,49 @@ class CmdbController < ApplicationController
   # Updates an existing location with new attributes.
   # Uses @location instance variable set by find_location before_action.
   # Parameter location (via params): Hash with location attributes to update
-  # Returns: JSON with success status and updated location ID, or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def update_location
     if @location.update(location_params)
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         id: @location.id,
         notice: I18n.t('hrz_cmdb.locations.updated')
       }
     else
+      return render_validation_errors(@location) if api_request?
+
       render json: { success: false, errors: @location.errors.full_messages }
     end
   end
 
   # Deletes a location.
   # Uses @location instance variable set by find_location before_action.
-  # Returns: JSON with success status or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the errors if the location still has children,
+  #          otherwise the UI JSON envelope
   def destroy_location
     if @location.destroy
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         notice: I18n.t('hrz_cmdb.locations.deleted')
       }
     else
+      return render_validation_errors(@location) if api_request?
+
       render json: { success: false, errors: @location.errors.full_messages }
     end
   end
 
   # Shows details of a specific CI class.
   # Uses @ci_class instance variable set by find_ci_class before_action.
-  # Returns: HTML partial or JSON representation
+  # Returns: show_ci_class.api.rsb for .json/.xml requests, otherwise HTML partial or plain JSON
   def show_ci_class
+    return render(:action => 'show_ci_class') if api_request?
+
     respond_to do |format|
       format.html { render partial: 'ci_class_details', locals: { ci_class: @ci_class, can_edit: can_edit_basic_data? } }
       format.json { render json: @ci_class }
@@ -405,19 +512,28 @@ class CmdbController < ApplicationController
     render partial: 'ci_class_form', locals: { ci_class: @ci_class, can_edit: can_edit_basic_data? }
   end
 
-  # Creates a new CI class from form parameters.
+  # Creates a new CI class from form or API parameters.
   # Parameter ci_class (via params): Hash with CI class attributes
-  # Returns: JSON with success status and created CI class ID, or error messages
+  # Returns: 201 with show_ci_class.api.rsb and a Location header for .json/.xml requests,
+  #          422 with the validation errors on failure, otherwise the UI JSON envelope
   def create_ci_class
     @ci_class = HrzcmCiClass.new(ci_class_params)
 
     if @ci_class.save
-      render json: {
-        success: true,
-        id: @ci_class.id,
-        notice: I18n.t('hrz_cmdb.ci_classes.created')
-      }
+      if api_request?
+        render :action => 'show_ci_class', :status => :created,
+               :location => url_for(:controller => 'cmdb', :action => 'show_ci_class',
+                                    :id => @ci_class.id, :format => params[:format], :only_path => false)
+      else
+        render json: {
+          success: true,
+          id: @ci_class.id,
+          notice: I18n.t('hrz_cmdb.ci_classes.created')
+        }
+      end
     else
+      return render_validation_errors(@ci_class) if api_request?
+
       render json: { success: false, errors: @ci_class.errors.full_messages }
     end
   end
@@ -425,28 +541,33 @@ class CmdbController < ApplicationController
   # Updates an existing CI class with new attributes.
   # Uses @ci_class instance variable set by find_ci_class before_action.
   # Parameter ci_class (via params): Hash with CI class attributes to update
-  # Returns: JSON with success status and updated CI class ID, or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def update_ci_class
     if @ci_class.update(ci_class_params)
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         id: @ci_class.id,
         notice: I18n.t('hrz_cmdb.ci_classes.updated')
       }
     else
+      return render_validation_errors(@ci_class) if api_request?
+
       render json: { success: false, errors: @ci_class.errors.full_messages }
     end
   end
 
-  # Deletes a CI class.
-  # Uses @ci_class instance variable set by find_ci_class before_action.
-  # Returns: JSON with success status or error messages
   # Deletes a CI class if it has no associated CIs and no subclasses.
   # Uses @ci_class instance variable set by find_ci_class before_action.
-  # Returns: JSON with success status if deletion successful, or error if CI class is in use
+  # Returns: 204 for .json/.xml requests, 422 with the blocking reason if the CI class is still
+  #          in use, otherwise the UI JSON envelope
   def destroy_ci_class
     # Check if CI class has CIs
     if HrzcmCi.exists?(j_ci_class_id: @ci_class.id)
+      return render_api_errors(I18n.t('hrz_cmdb.ci_classes.has_cis')) if api_request?
+
       render json: {
         success: false,
         error: I18n.t('hrz_cmdb.ci_classes.has_cis')
@@ -456,6 +577,8 @@ class CmdbController < ApplicationController
 
     # Check if CI class has subclasses
     if HrzcmCiClass.exists?(j_subclass_of_id: @ci_class.id)
+      return render_api_errors(I18n.t('hrz_cmdb.ci_classes.has_subclasses')) if api_request?
+
       render json: {
         success: false,
         error: I18n.t('hrz_cmdb.ci_classes.has_subclasses')
@@ -466,15 +589,21 @@ class CmdbController < ApplicationController
     # Try to delete
     begin
       if @ci_class.destroy
+        return render_api_ok if api_request?
+
         render json: {
           success: true,
           notice: I18n.t('hrz_cmdb.ci_classes.deleted')
         }
       else
+        return render_validation_errors(@ci_class) if api_request?
+
         render json: { success: false, errors: @ci_class.errors.full_messages }
       end
     rescue ActiveRecord::InvalidForeignKey => e
       # Fallback for any foreign key constraint errors we didn't catch
+      return render_api_errors(I18n.t('hrz_cmdb.ci_classes.cannot_delete_in_use')) if api_request?
+
       render json: {
         success: false,
         error: I18n.t('hrz_cmdb.ci_classes.cannot_delete_in_use')
@@ -484,8 +613,10 @@ class CmdbController < ApplicationController
 
   # Shows details of a specific CI (Configuration Item).
   # Uses @ci instance variable set by find_ci before_action.
-  # Returns: HTML partial or JSON representation
+  # Returns: show_ci.api.rsb for .json/.xml requests, otherwise HTML partial or plain JSON
   def show_ci
+    return render(:action => 'show_ci') if api_request?
+
     respond_to do |format|
       format.html { render partial: 'ci_details', locals: { ci: @ci, can_edit: can_edit? } }
       format.json { render json: @ci }
@@ -499,19 +630,28 @@ class CmdbController < ApplicationController
     render partial: 'ci_form', locals: { ci: @ci, can_edit: can_edit? }
   end
 
-  # Creates a new CI from form parameters.
+  # Creates a new CI from form or API parameters.
   # Parameter ci (via params): Hash with CI attributes
-  # Returns: JSON with success status and created CI ID, or error messages
+  # Returns: 201 with show_ci.api.rsb and a Location header for .json/.xml requests,
+  #          422 with the validation errors on failure, otherwise the UI JSON envelope
   def create_ci
     @ci = HrzcmCi.new(ci_params)
 
     if @ci.save
-      render json: {
-        success: true,
-        id: @ci.id,
-        notice: I18n.t('hrz_cmdb.cis.created')
-      }
+      if api_request?
+        render :action => 'show_ci', :status => :created,
+               :location => url_for(:controller => 'cmdb', :action => 'show_ci',
+                                    :id => @ci.id, :format => params[:format], :only_path => false)
+      else
+        render json: {
+          success: true,
+          id: @ci.id,
+          notice: I18n.t('hrz_cmdb.cis.created')
+        }
+      end
     else
+      return render_validation_errors(@ci) if api_request?
+
       render json: { success: false, errors: @ci.errors.full_messages }
     end
   end
@@ -519,37 +659,49 @@ class CmdbController < ApplicationController
   # Updates an existing CI with new attributes.
   # Uses @ci instance variable set by find_ci before_action.
   # Parameter ci (via params): Hash with CI attributes to update
-  # Returns: JSON with success status and updated CI ID, or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def update_ci
     if @ci.update(ci_params)
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         id: @ci.id,
         notice: I18n.t('hrz_cmdb.cis.updated')
       }
     else
+      return render_validation_errors(@ci) if api_request?
+
       render json: { success: false, errors: @ci.errors.full_messages }
     end
   end
 
   # Deletes a CI.
   # Uses @ci instance variable set by find_ci before_action.
-  # Returns: JSON with success status or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def destroy_ci
     if @ci.destroy
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         notice: I18n.t('hrz_cmdb.cis.deleted')
       }
     else
+      return render_validation_errors(@ci) if api_request?
+
       render json: { success: false, errors: @ci.errors.full_messages }
     end
   end
 
   # Shows details of a specific lifecycle status.
   # Uses @lifecycle_status instance variable set by find_lifecycle_status before_action.
-  # Returns: HTML partial or JSON representation
+  # Returns: show_lifecycle_status.api.rsb for .json/.xml requests, otherwise HTML partial or plain JSON
   def show_lifecycle_status
+    return render(:action => 'show_lifecycle_status') if api_request?
+
     respond_to do |format|
       format.html { render partial: 'lifecycle_status_details', locals: { lifecycle_status: @lifecycle_status, can_edit: can_edit_basic_data? } }
       format.json { render json: @lifecycle_status }
@@ -563,19 +715,28 @@ class CmdbController < ApplicationController
     render partial: 'lifecycle_status_form', locals: { lifecycle_status: @lifecycle_status, can_edit: can_edit_basic_data? }
   end
 
-  # Creates a new lifecycle status from form parameters.
+  # Creates a new lifecycle status from form or API parameters.
   # Parameter lifecycle_status (via params): Hash with lifecycle status attributes
-  # Returns: JSON with success status and created lifecycle status ID, or error messages
+  # Returns: 201 with show_lifecycle_status.api.rsb and a Location header for .json/.xml requests,
+  #          422 with the validation errors on failure, otherwise the UI JSON envelope
   def create_lifecycle_status
     @lifecycle_status = HrzcmLifecycleStatus.new(lifecycle_status_params)
 
     if @lifecycle_status.save
-      render json: {
-        success: true,
-        id: @lifecycle_status.id,
-        notice: I18n.t('hrz_cmdb.lifecycle_statuses.created')
-      }
+      if api_request?
+        render :action => 'show_lifecycle_status', :status => :created,
+               :location => url_for(:controller => 'cmdb', :action => 'show_lifecycle_status',
+                                    :id => @lifecycle_status.id, :format => params[:format], :only_path => false)
+      else
+        render json: {
+          success: true,
+          id: @lifecycle_status.id,
+          notice: I18n.t('hrz_cmdb.lifecycle_statuses.created')
+        }
+      end
     else
+      return render_validation_errors(@lifecycle_status) if api_request?
+
       render json: { success: false, errors: @lifecycle_status.errors.full_messages }
     end
   end
@@ -583,37 +744,49 @@ class CmdbController < ApplicationController
   # Updates an existing lifecycle status with new attributes.
   # Uses @lifecycle_status instance variable set by find_lifecycle_status before_action.
   # Parameter lifecycle_status (via params): Hash with lifecycle status attributes to update
-  # Returns: JSON with success status and updated lifecycle status ID, or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def update_lifecycle_status
     if @lifecycle_status.update(lifecycle_status_params)
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         id: @lifecycle_status.id,
         notice: I18n.t('hrz_cmdb.lifecycle_statuses.updated')
       }
     else
+      return render_validation_errors(@lifecycle_status) if api_request?
+
       render json: { success: false, errors: @lifecycle_status.errors.full_messages }
     end
   end
 
   # Deletes a lifecycle status.
   # Uses @lifecycle_status instance variable set by find_lifecycle_status before_action.
-  # Returns: JSON with success status or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def destroy_lifecycle_status
     if @lifecycle_status.destroy
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         notice: I18n.t('hrz_cmdb.lifecycle_statuses.deleted')
       }
     else
+      return render_validation_errors(@lifecycle_status) if api_request?
+
       render json: { success: false, errors: @lifecycle_status.errors.full_messages }
     end
   end
 
   # Shows details of a specific external system.
   # Uses @ext_sys instance variable set by find_ext_sys before_action.
-  # Returns: HTML partial or JSON representation
+  # Returns: show_ext_sys.api.rsb for .json/.xml requests, otherwise HTML partial or plain JSON
   def show_ext_sys
+    return render(:action => 'show_ext_sys') if api_request?
+
     respond_to do |format|
       format.html { render partial: 'ext_sys_details', locals: { ext_sys: @ext_sys, can_edit: can_edit_basic_data? } }
       format.json { render json: @ext_sys }
@@ -627,19 +800,28 @@ class CmdbController < ApplicationController
     render partial: 'ext_sys_form', locals: { ext_sys: @ext_sys, can_edit: can_edit_basic_data? }
   end
 
-  # Creates a new external system from form parameters.
+  # Creates a new external system from form or API parameters.
   # Parameter ext_sys (via params): Hash with external system attributes
-  # Returns: JSON with success status and created external system ID, or error messages
+  # Returns: 201 with show_ext_sys.api.rsb and a Location header for .json/.xml requests,
+  #          422 with the validation errors on failure, otherwise the UI JSON envelope
   def create_ext_sys
     @ext_sys = HrzcmExtSys.new(ext_sys_params)
 
     if @ext_sys.save
-      render json: {
-        success: true,
-        id: @ext_sys.id,
-        notice: I18n.t('hrz_cmdb.external_systems.created')
-      }
+      if api_request?
+        render :action => 'show_ext_sys', :status => :created,
+               :location => url_for(:controller => 'cmdb', :action => 'show_ext_sys',
+                                    :id => @ext_sys.id, :format => params[:format], :only_path => false)
+      else
+        render json: {
+          success: true,
+          id: @ext_sys.id,
+          notice: I18n.t('hrz_cmdb.external_systems.created')
+        }
+      end
     else
+      return render_validation_errors(@ext_sys) if api_request?
+
       render json: { success: false, errors: @ext_sys.errors.full_messages }
     end
   end
@@ -647,29 +829,39 @@ class CmdbController < ApplicationController
   # Updates an existing external system with new attributes.
   # Uses @ext_sys instance variable set by find_ext_sys before_action.
   # Parameter ext_sys (via params): Hash with external system attributes to update
-  # Returns: JSON with success status and updated external system ID, or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def update_ext_sys
     if @ext_sys.update(ext_sys_params)
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         id: @ext_sys.id,
         notice: I18n.t('hrz_cmdb.external_systems.updated')
       }
     else
+      return render_validation_errors(@ext_sys) if api_request?
+
       render json: { success: false, errors: @ext_sys.errors.full_messages }
     end
   end
 
   # Deletes an external system.
   # Uses @ext_sys instance variable set by find_ext_sys before_action.
-  # Returns: JSON with success status or error messages
+  # Returns: 204 for .json/.xml requests, 422 with the validation errors on failure,
+  #          otherwise the UI JSON envelope
   def destroy_ext_sys
     if @ext_sys.destroy
+      return render_api_ok if api_request?
+
       render json: {
         success: true,
         notice: I18n.t('hrz_cmdb.external_systems.deleted')
       }
     else
+      return render_validation_errors(@ext_sys) if api_request?
+
       render json: { success: false, errors: @ext_sys.errors.full_messages }
     end
   end

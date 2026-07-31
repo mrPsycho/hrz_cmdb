@@ -1,0 +1,22 @@
+#-------------------------------------------------------------------------------------------#
+# Redmine CMDB plugin: Configuration Management DataBase                                    #
+# Copyright (C) 2025 Franz Apeltauer                                                        #
+#                                                                                           #
+# This program is free software: you can redistribute it and/or modify it under the terms   #
+# of the GNU Affero General Public License as published by the Free Software Foundation,    #
+# either version 3 of the License, or (at your option) any later version.                   #
+#                                                                                           #
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
+# See the GNU Affero General Public License for more details.                               #
+#                                                                                           #
+# You should have received a copy of the GNU Affero General Public License                  #
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.                    #
+#-------------------------------------------------------------------------------------eohdr-#
+# Purpose: REST API template rendering a paginated collection of location hierarchy levels
+#          as JSON or XML. Single level serialisation is shared with show.api.rsb via CmdbHelper.
+api.array :hrzcm_locat_hiers, api_meta(:total_count => @hierarchies_count, :offset => @offset, :limit => @limit) do
+  @hierarchies.each do |hierarchy|
+    render_api_locat_hier(hierarchy, api)
+  end
+end

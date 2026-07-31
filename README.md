@@ -129,6 +129,48 @@ The plugin supports the following languages:
 - ua: українська - Ukrainian 
 
 
+## REST API
+
+The plugin exposes its data through the standard Redmine REST API. Enable
+*Administration → Settings → API → Enable REST web service* first. Authenticate with an
+API key (`X-Redmine-API-Key` header or `key=` parameter) or HTTP basic auth, and append
+`.json` or `.xml` to the URL — an `Accept` header alone is not enough.
+
+Access is governed by the same permissions as the web interface: the group based
+`view_cmdb` / `edit_cmdb` / `edit_basic_data` settings for the CMDB endpoints, and the
+project roles `view_issue_cis` / `manage_issue_cis` for the issue endpoints.
+
+Collections support `offset`, `limit` (default 25, maximum 100) and `page`, and return
+`total_count`, `offset` and `limit` alongside the records.
+
+| Resource | Endpoints |
+|---|---|
+| Locations | `GET /cmdb/locations`, `GET /cmdb/location/:id`, `POST /cmdb/location`, `PUT /cmdb/location/:id`, `DELETE /cmdb/location/:id` |
+| CI classes | `GET /cmdb/ci_classes`, `GET /cmdb/ci_class/:id`, `POST /cmdb/ci_classes`, `PUT /cmdb/ci_classes/:id`, `DELETE /cmdb/ci_classes/:id` |
+| Configuration items | `GET /cmdb/cis`, `GET /cmdb/ci/:id`, `POST /cmdb/cis`, `PUT /cmdb/cis/:id`, `DELETE /cmdb/cis/:id` |
+| Lifecycle statuses | `GET /cmdb/lifecycle_statuses`, `GET /cmdb/lifecycle_status/:id`, `POST /cmdb/lifecycle_statuses`, `PUT /cmdb/lifecycle_statuses/:id`, `DELETE /cmdb/lifecycle_statuses/:id` |
+| External systems | `GET /cmdb/external_systems`, `GET /cmdb/ext_sys/:id`, `POST /cmdb/external_systems`, `PUT /cmdb/external_systems/:id`, `DELETE /cmdb/external_systems/:id` |
+| Location hierarchy levels | `GET /cmdb_basic_data`, `GET /cmdb_basic_data/location_hierarchies/:id`, `POST /cmdb_basic_data/location_hierarchies`, `PUT /cmdb_basic_data/location_hierarchies/:id`, `DELETE /cmdb_basic_data/location_hierarchies/:id` |
+| CIs of an issue | `GET /issues/:issue_id/cis`, `POST /issues/:issue_id/cis`, `DELETE /issues/:issue_id/cis/:ci_id` |
+
+Filters: locations accept `j_type_id` and `j_part_of1_id`, CI classes accept
+`j_subclass_of_id`, CIs accept `j_ci_class_id`, `j_location_id`, `j_status_id` and
+`b_tag_serial`.
+
+Request bodies use the database field names, wrapped in the object name:
+
+```bash
+curl -X POST https://redmine.example.org/cmdb/cis.json \
+     -H "Content-Type: application/json" \
+     -H "X-Redmine-API-Key: <your api key>" \
+     -d '{"ci": {"b_name_full": "Database Server 02", "b_name_abbr": "DB02",
+                 "j_ci_class_id": 2, "j_location_id": 3, "j_status_id": 2}}'
+```
+
+Responses: `201 Created` with the new record (and a `Location` header) for `POST`,
+`204 No Content` for `PUT` and `DELETE`, `422 Unprocessable Entity` with an `errors` list
+for validation failures, `403` when a permission is missing and `404` for unknown records.
+
 ## Uninstall
 
 1. Undo database migration:

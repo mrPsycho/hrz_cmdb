@@ -1,0 +1,22 @@
+#-------------------------------------------------------------------------------------------#
+# Redmine CMDB plugin: Configuration Management DataBase                                    #
+# Copyright (C) 2025 Franz Apeltauer                                                        #
+#                                                                                           #
+# This program is free software: you can redistribute it and/or modify it under the terms   #
+# of the GNU Affero General Public License as published by the Free Software Foundation,    #
+# either version 3 of the License, or (at your option) any later version.                   #
+#                                                                                           #
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
+# See the GNU Affero General Public License for more details.                               #
+#                                                                                           #
+# You should have received a copy of the GNU Affero General Public License                  #
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.                    #
+#-------------------------------------------------------------------------------------eohdr-#
+# Purpose: REST API template rendering a paginated collection of lifecycle statuses as JSON or XML.
+#          Serialisation of a single status is shared with show_lifecycle_status.api.rsb via CmdbHelper.
+api.array :hrzcm_lifecycle_statuses, api_meta(:total_count => @lifecycle_statuses_count, :offset => @offset, :limit => @limit) do
+  @lifecycle_statuses.each do |status|
+    render_api_lifecycle_status(status, api)
+  end
+end
