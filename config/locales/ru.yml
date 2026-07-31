@@ -59,6 +59,7 @@ ru:
         b_model: "Модель"
         b_tag_serial: "Метка, Серийный номер, Инвентарный номер"
         j_status_id: "Статус жизненного цикла"
+        j_assigned_user_id: "Назначенный пользователь"
       hrzcm_ext_sys:
         b_name_full: "Полное имя"
         b_name_abbr: "Аббревиатура"
@@ -75,6 +76,7 @@ ru:
     select_ci_class: "Выберите класс CI"
     select_location: "Выберите локацию"
     select_status: "Выберите статус жизненного цикла"
+    select_assigned_user: "Выберите пользователя"
 
     locations:
       title: "Локации"
@@ -107,6 +109,7 @@ ru:
       created: "CI успешно создан"
       updated: "CI успешно обновлен"
       deleted: "CI успешно удален"
+      assigned_to_user: "Назначенные конфигурационные элементы"
 
     cis_by_class:
       title: "CI по классам"
@@ -150,6 +153,7 @@ ru:
       b_model: "Модель"
       b_tag_serial: "Метка, Серийный номер, Инвентарный номер"
       j_status: "Статус жизненного цикла"
+      j_assigned_user: "Назначенный пользователь"
       b_url_ci_details_ext: "URL внешней системы для деталей CI"
       j_redmine_user_id: "ID пользователя Redmine"
       j_location_default_id: "Местоположение по умолчанию"

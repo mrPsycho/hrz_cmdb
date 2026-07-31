@@ -178,6 +178,18 @@ class Redmine::ApiTest::CmdbApiTest < Redmine::ApiTest::Base
     assert_equal 'DB01', json['hrzcm_cis'].first['b_name_abbr']
   end
 
+  test "should filter cis by assigned user" do
+    HrzcmCi.find(3).update!(j_assigned_user_id: 2)
+
+    get '/cmdb/cis.json?j_assigned_user_id=2', :headers => @admin
+    assert_response :success
+
+    json = ActiveSupport::JSON.decode(response.body)
+    assert_equal 1, json['hrzcm_cis'].size
+    assert_equal 3, json['hrzcm_cis'].first['id']
+    assert_equal 2, json['hrzcm_cis'].first['assigned_user']['id']
+  end
+
   test "should show ci with linked issues" do
     get '/cmdb/ci/2.json', :headers => @admin
     assert_response :success
@@ -216,6 +228,18 @@ class Redmine::ApiTest::CmdbApiTest < Redmine::ApiTest::Base
         :headers => @admin
     assert_response :no_content
     assert_equal 'Dell', HrzcmCi.find(3).b_producer
+  end
+
+  test "should assign ci to a user" do
+    put '/cmdb/cis/3.json',
+        :params => { :ci => { :j_assigned_user_id => 2 } },
+        :headers => @admin
+    assert_response :no_content
+    assert_equal 2, HrzcmCi.find(3).j_assigned_user_id
+
+    get '/cmdb/ci/3.json', :headers => @admin
+    json = ActiveSupport::JSON.decode(response.body)
+    assert_equal 2, json['hrzcm_ci']['assigned_user']['id']
   end
 
   test "should destroy ci" do

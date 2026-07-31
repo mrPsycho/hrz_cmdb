@@ -23,6 +23,8 @@ class HrzcmCi < ActiveRecord::Base
   belongs_to :ci_class, class_name: 'HrzcmCiClass', foreign_key: 'j_ci_class_id', optional: true
   belongs_to :location, class_name: 'HrzcmLocation', foreign_key: 'j_location_id', optional: true
   belongs_to :lifecycle_status, class_name: 'HrzcmLifecycleStatus', foreign_key: 'j_status_id', optional: true
+  # Redmine user the CI is currently handed out to. Optional, most CIs (servers, switches) have no holder.
+  belongs_to :assigned_user, class_name: 'User', foreign_key: 'j_assigned_user_id', optional: true
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by', optional: true
   belongs_to :updater, class_name: 'User', foreign_key: 'updated_by', optional: true
 
@@ -46,6 +48,7 @@ class HrzcmCi < ActiveRecord::Base
   scope :ordered_by_abbr, -> { order(:b_name_abbr) }
   scope :for_location, ->(location_id) { where(j_location_id: location_id) }
   scope :for_ci_class, ->(ci_class_id) { where(j_ci_class_id: ci_class_id) }
+  scope :for_assigned_user, ->(user_id) { where(j_assigned_user_id: user_id) }
 
   # Callbacks
   before_create :set_creator

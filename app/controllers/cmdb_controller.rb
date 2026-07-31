@@ -99,6 +99,7 @@ class CmdbController < ApplicationController
   # Parameter j_location_id (via params): Integer location ID, optional filter
   # Parameter j_status_id (via params): Integer lifecycle status ID, optional filter
   # Parameter b_tag_serial (via params): String serial number, optional exact match filter
+  # Parameter j_assigned_user_id (via params): Integer Redmine user ID the CI is handed out to, optional filter
   # Parameter offset / limit / page (via params): Redmine pagination parameters, limit is capped at 100
   # Sets: @cis, @cis_count, @offset, @limit
   # Returns: index_cis.api.rsb rendering of the paginated collection
@@ -108,10 +109,11 @@ class CmdbController < ApplicationController
     scope = scope.for_location(params[:j_location_id].to_i) if params[:j_location_id].present?
     scope = scope.where(j_status_id: params[:j_status_id].to_i) if params[:j_status_id].present?
     scope = scope.where(b_tag_serial: params[:b_tag_serial].to_s) if params[:b_tag_serial].present?
+    scope = scope.for_assigned_user(params[:j_assigned_user_id].to_i) if params[:j_assigned_user_id].present?
 
     @offset, @limit = api_offset_and_limit
     @cis_count = scope.count
-    @cis = scope.includes(:ci_class, :location, :lifecycle_status).limit(@limit).offset(@offset).to_a
+    @cis = scope.includes(:ci_class, :location, :lifecycle_status, :assigned_user).limit(@limit).offset(@offset).to_a
   end
 
   # Lists lifecycle statuses for the REST API.
@@ -973,7 +975,8 @@ class CmdbController < ApplicationController
   def ci_params
     params.require(:ci).permit(:b_name_full, :b_name_abbr, :b_comment,
                                :b_url_doc, :j_ci_class_id, :j_location_id,
-                               :b_producer, :b_model, :b_tag_serial, :j_status_id)
+                               :b_producer, :b_model, :b_tag_serial, :j_status_id,
+                               :j_assigned_user_id)
   end
 
   # Strong parameters filter for lifecycle status attributes.

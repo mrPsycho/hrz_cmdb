@@ -59,6 +59,7 @@ ro:
         b_model: "Model"
         b_tag_serial: "Etichetă, Număr de serie, Număr inventar"
         j_status_id: "Stare ciclu de viață"
+        j_assigned_user_id: "Utilizator alocat"
       hrzcm_ext_sys:
         b_name_full: "Nume complet"
         b_name_abbr: "Abreviere"
@@ -75,6 +76,7 @@ ro:
     select_ci_class: "Selectați clasa CI"
     select_location: "Selectați locația"
     select_status: "Selectați starea ciclului de viață"
+    select_assigned_user: "Selectați utilizatorul"
 
     locations:
       title: "Locații"
@@ -107,6 +109,7 @@ ro:
       created: "CI creat cu succes"
       updated: "CI actualizat cu succes"
       deleted: "CI șters cu succes"
+      assigned_to_user: "Elemente de configurare alocate"
 
     cis_by_class:
       title: "CI-uri pe clase"
@@ -150,6 +153,7 @@ ro:
       b_model: "Model"
       b_tag_serial: "Etichetă, Număr de serie, Număr inventar"
       j_status: "Stare ciclu de viață"
+      j_assigned_user: "Utilizator alocat"
       b_url_ci_details_ext: "URL sistem extern pentru detalii CI"
       j_redmine_user_id: "ID utilizator Redmine"
       j_location_default_id: "Locație implicită"

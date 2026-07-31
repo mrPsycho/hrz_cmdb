@@ -250,9 +250,11 @@ module CmdbHelper
       api.j_ci_class_id  ci.j_ci_class_id
       api.j_location_id  ci.j_location_id
       api.j_status_id    ci.j_status_id
+      api.j_assigned_user_id ci.j_assigned_user_id
       api.ci_class(:id => ci.ci_class.id, :name => ci.ci_class.b_name_abbr) if ci.ci_class
       api.location(:id => ci.location.id, :name => ci.location.b_name_abbr) if ci.location
       api.lifecycle_status(:id => ci.lifecycle_status.id, :name => ci.lifecycle_status.b_name_abbr) if ci.lifecycle_status
+      api.assigned_user(:id => ci.assigned_user.id, :name => ci.assigned_user.name) if ci.assigned_user
       if with_issues
         api.array :issues do
           ci.issues.visible.each do |issue|

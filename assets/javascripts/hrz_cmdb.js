@@ -24,6 +24,17 @@ var HrzCmdb = {
     this.options = options;
     this.initTree();
     this.bindEvents();
+    this.openLinkedCi();
+  },
+
+  // Opens the CI referenced by a ?ci_id=<id> query parameter directly in the details pane.
+  // Used by the fast links from the Redmine user page; does nothing when the parameter is absent.
+  openLinkedCi: function() {
+    var match = window.location.search.match(/[?&]ci_id=(\d+)/);
+
+    if (match) {
+      this.loadDetails('ci_' + match[1], 'ci');
+    }
   },
 
   initTree: function() {

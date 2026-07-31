@@ -1,0 +1,51 @@
+<!-- ------------------------------------------------------------------------------------------- -->
+<!--  Redmine CMDB plugin: Configuration Management DataBase                                     -->
+<!--  Copyright (C) 2025 Franz Apeltauer                                                         -->
+<!--                                                                                             -->
+<!--  This program is free software: you can redistribute it and/or modify it under the terms    -->
+<!--  of the GNU Affero General Public License as published by the Free Software Foundation,     -->
+<!--  either version 3 of the License, or (at your option) any later version.                    -->
+<!--                                                                                             -->
+<!--  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  -->
+<!--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  -->
+<!--  See the GNU Affero General Public License for more details.                                -->
+<!--                                                                                             -->
+<!--  You should have received a copy of the GNU Affero General Public License                   -->
+<!--  along with this program.  If not, see <https://www.gnu.org/licenses/>.                     -->
+<!-- -------------------------------------------------------------------------------------eohdr- -->
+<%# Purpose: Partial injected into the Redmine user page listing the CIs assigned to that user.
+            Each row links back into the CMDB tree view with the CI details already opened. %>
+
+<% if user.present? && HrzCmdb::PermissionHelper.user_has_permission?(User.current, 'view_cmdb') %>
+  <% assigned_cis = HrzcmCi.for_assigned_user(user.id)
+                           .includes(:ci_class, :location, :lifecycle_status)
+                           .ordered_by_abbr %>
+  <% if assigned_cis.any? %>
+    <div id="cmdb-assigned-cis" class="cmdb-assigned-cis">
+      <h3><%= l('hrz_cmdb.cis.assigned_to_user') %></h3>
+
+      <table class="list">
+        <thead>
+          <tr>
+            <th><%= l('hrz_cmdb.fields.b_name_abbr') %></th>
+            <th><%= l('hrz_cmdb.fields.j_ci_class') %></th>
+            <th><%= l('hrz_cmdb.fields.j_location') %></th>
+            <th><%= l('hrz_cmdb.fields.j_status') %></th>
+            <th><%= l('hrz_cmdb.fields.b_tag_serial') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% assigned_cis.each do |ci| %>
+            <tr>
+              <td><%= link_to ci.display_name, cmdb_index_path(ci_id: ci.id) %></td>
+              <td><%= ci.ci_class&.b_name_abbr %></td>
+              <td><%= ci.location&.b_name_abbr %></td>
+              <td><%= ci.lifecycle_status&.b_name_abbr %></td>
+              <td><%= ci.b_tag_serial %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+<% end %>

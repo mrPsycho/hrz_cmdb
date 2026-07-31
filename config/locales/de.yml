@@ -59,6 +59,7 @@ de:
         b_model: "Modell"
         b_tag_serial: "Tag, Seriennummer, Inventarnummer"
         j_status_id: "Lifecycle-Status"
+        j_assigned_user_id: "Zugewiesener Benutzer"
 
   hrz_cmdb:
     select_item: "Wählen Sie ein Element aus dem Baum aus, um Details anzuzeigen"
@@ -66,6 +67,7 @@ de:
     select_ci_class: "CI-Klasse auswählen"
     select_location: "Standort auswählen"
     select_status: "Lifecycle-Status auswählen"
+    select_assigned_user: "Benutzer auswählen"
 
     locations:
       title: "Standorte"
@@ -98,6 +100,7 @@ de:
       created: "CI erfolgreich erstellt"
       updated: "CI erfolgreich aktualisiert"
       deleted: "CI erfolgreich gelöscht"
+      assigned_to_user: "Zugewiesene Configuration Items"
 
     cis_by_class:
       title: "CIs nach Klasse"
@@ -141,6 +144,7 @@ de:
       b_model: "Modell"
       b_tag_serial: "Tag, Seriennummer, Inventarnummer"
       j_status: "Lifecycle-Status"
+      j_assigned_user: "Zugewiesener Benutzer"
       b_url_ci_details_ext: "URL ext. System CI-Detail-Anzeige"
       j_redmine_user_id: "Redmine-User-ID"
       j_location_default_id: "Voreingestellter Ort"

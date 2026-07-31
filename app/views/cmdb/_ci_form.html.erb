@@ -96,6 +96,19 @@
     </div>
 
     <div class="form-group">
+      <%= label_tag :j_assigned_user_id, l('hrz_cmdb.fields.j_assigned_user') %>
+      <div class="field-wrapper">
+        <%= select_tag 'ci[j_assigned_user_id]',
+                       options_for_select(
+                         [[l('hrz_cmdb.select_assigned_user'), '']] +
+                         User.active.sorted.map { |u| ["#{u.name} (#{u.login})", u.id] }
+                       ),
+                       class: 'form-control',
+                       id: 'ci_j_assigned_user_id' %>
+      </div>
+    </div>
+
+    <div class="form-group">
       <%= label_tag :b_comment, l('hrz_cmdb.fields.b_comment') %>
       <div class="field-wrapper">
         <%= text_area_tag 'ci[b_comment]', '', class: 'form-control', rows: 5, maxlength: 10000 %>

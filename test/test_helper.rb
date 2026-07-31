@@ -19,6 +19,19 @@
 # Load the Redmine test helper
 require File.expand_path(File.dirname(__FILE__) + '/../../../test/test_helper')
 
+# Redmine's plugin test task only registers Redmine's own fixture directory, so the plugin
+# fixtures have to be added explicitly. Rails 7.1 renamed fixture_path to fixture_paths, and
+# ActionController::TestCase / ActionDispatch::IntegrationTest keep their own copy of the
+# attribute, so every base class the plugin tests derive from has to be updated.
+hrz_cmdb_fixture_path = File.expand_path('fixtures', __dir__)
+[ActiveSupport::TestCase, ActionController::TestCase, ActionDispatch::IntegrationTest].each do |base_class|
+  if base_class.respond_to?(:fixture_paths)
+    base_class.fixture_paths = base_class.fixture_paths | [hrz_cmdb_fixture_path]
+  else
+    base_class.fixture_path = hrz_cmdb_fixture_path
+  end
+end
+
 # Additional test helper methods for CMDB plugin
 class ActiveSupport::TestCase
   # Returns a user with CMDB permissions

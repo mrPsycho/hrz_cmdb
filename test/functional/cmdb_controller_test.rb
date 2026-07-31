@@ -122,6 +122,32 @@ class CmdbControllerTest < ActionController::TestCase
     assert_response :forbidden
   end
 
+  # Creating a CI with an assigned Redmine user must persist j_assigned_user_id.
+  # Note: no :format is passed, because Redmine ignores the test session for
+  # api_request? (params[:format] == 'json'/'xml') requests on actions listed in
+  # accept_api_auth. The plugin's own UI sends Accept: application/json without a
+  # format extension, which is what this test reproduces.
+  test "should create ci with an assigned user" do
+    @request.session[:user_id] = @admin.id
+    @request.headers['Accept'] = 'application/json'
+
+    assert_difference 'HrzcmCi.count', 1 do
+      post :create_ci, params: {
+        ci: {
+          b_name_full: 'Handed out laptop',
+          b_name_abbr: 'LT01',
+          j_ci_class_id: 2,
+          j_assigned_user_id: 2
+        }
+      }
+    end
+
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert json['success']
+    assert_equal 2, HrzcmCi.find(json['id']).j_assigned_user_id
+  end
+
   test "should not create ci without required ci_class_id" do
     @request.session[:user_id] = @user_with_edit.id
 

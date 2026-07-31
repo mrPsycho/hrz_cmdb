@@ -18,7 +18,7 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class HrzcmCiTest < ActiveSupport::TestCase
-  fixtures :hrzcm_ci_class, :hrzcm_location, :hrzcm_lifecycle_status, :hrzcm_ci
+  fixtures :users, :hrzcm_ci_class, :hrzcm_location, :hrzcm_lifecycle_status, :hrzcm_ci
 
   # Test validations
   test "should validate presence of ci_class_id" do
@@ -100,6 +100,29 @@ class HrzcmCiTest < ActiveSupport::TestCase
     assert_equal 2, cis.count
     assert_includes cis.map(&:id), 1
     assert_includes cis.map(&:id), 2
+  end
+
+  test "for_assigned_user scope should filter by assigned user" do
+    HrzcmCi.find(1).update!(j_assigned_user_id: 2)
+    HrzcmCi.find(2).update!(j_assigned_user_id: 3)
+
+    cis = HrzcmCi.for_assigned_user(2).to_a
+    assert_equal [1], cis.map(&:id)
+  end
+
+  # Test assigned user association
+  test "should belong to assigned_user" do
+    ci = HrzcmCi.find(1)
+    ci.update!(j_assigned_user_id: 2)
+
+    assert_equal 2, ci.reload.assigned_user.id
+  end
+
+  test "assigned_user should be optional" do
+    ci = HrzcmCi.new(b_name_full: 'Unassigned CI', j_ci_class_id: 2)
+
+    assert ci.valid?
+    assert_nil ci.assigned_user
   end
 
   # Test instance methods
