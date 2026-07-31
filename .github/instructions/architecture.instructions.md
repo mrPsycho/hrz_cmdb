@@ -67,8 +67,9 @@ dependent CIs cannot be deleted. Deletion failures are expected behaviour, not b
   (`show_seed_data_management`, `add_seed_data`, `remove_unused_seed_data`), backed by
   [lib/hrz_cmdb/seed_data.rb](lib/hrz_cmdb/seed_data.rb) and
   [lib/hrz_cmdb/seed_data_helper.rb](lib/hrz_cmdb/seed_data_helper.rb).
-- **`IssueCisController`** — `available_cis`, `create`, `destroy` under
-  `/issues/:issue_id/cis`.
+- **`IssueCisController`** — `available_cis`, `index`, `create`, `destroy` under
+  `/issues/:issue_id/cis`. The issue is loaded with `Issue.visible`, so issue visibility
+  rules apply on top of the project permission.
 
 ## Two permission systems
 
@@ -102,6 +103,19 @@ Every controller action needs a permission check.
 - [assets/javascripts/hrz_cmdb.js](assets/javascripts/hrz_cmdb.js) drives tree navigation
   and the AJAX CRUD calls; [assets/javascripts/issue_cis.js](assets/javascripts/issue_cis.js)
   drives the CI selection modal on issue pages.
+
+## REST API
+
+Since 0.8.0 the same three controllers also serve JSON and XML to external clients. There
+is no separate API controller: `accept_api_auth` lists the API-reachable actions, and each
+action has an early `return … if api_request?` branch **before** its `respond_to` block.
+`format.api` is deliberately not used, because it aliases `any(:xml, :json)` and would
+capture the UI's own `Accept: application/json` AJAX calls.
+
+Rendering goes through `*.api.rsb` builder templates next to the HTML views; the actual
+serialisation lives in `render_api_<entity>(record, api)` methods in
+[app/helpers/cmdb_helper.rb](app/helpers/cmdb_helper.rb), so index and show share it.
+Details and rules: [redmine-rest-api.instructions.md](.github/instructions/redmine-rest-api.instructions.md).
 
 ## Integration points
 

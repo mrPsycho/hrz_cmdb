@@ -27,7 +27,7 @@ Read the relevant file before editing:
 | Translations (all 11 locale files) | [.github/instructions/locales.instructions.md](.github/instructions/locales.instructions.md) |
 | Tests and rake commands | [.github/instructions/testing.instructions.md](.github/instructions/testing.instructions.md) |
 | Migrations and three-layer validation | [.github/instructions/migrations.instructions.md](.github/instructions/migrations.instructions.md) |
-| Adding a REST API | [.github/instructions/redmine-rest-api.instructions.md](.github/instructions/redmine-rest-api.instructions.md) |
+| REST API: endpoints, api.rsb templates, API auth | [.github/instructions/redmine-rest-api.instructions.md](.github/instructions/redmine-rest-api.instructions.md) |
 
 Background architecture notes are in [CLAUDE.md](CLAUDE.md).
 

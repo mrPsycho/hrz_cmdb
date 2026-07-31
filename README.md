@@ -12,6 +12,7 @@ A Configuration Management DataBase (CMDB) plugin for Redmine 6.1+ where you can
 - Fine-grained access control
 - Documentation links 
 - Tiki (TikiWiki) integration
+- REST API (JSON and XML) for all CMDB data and for the CIs of a ticket
 
 ## Installation
 
@@ -209,6 +210,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
+
+###### Version 0.8.0  31.07.2026
+
+Adds a REST API, see the *REST API* section above. Every entity that can be maintained in
+the web interface can now also be read and written by external clients and scripts, using
+an API key or HTTP basic auth, in JSON or XML.
+
+Also fixed: the CIs of a ticket were only protected by the project permission, not by the
+issue visibility rules. Private tickets and "own issues only" roles are now honoured.
 
 ###### Version 0.7.0  26.10.2025
 

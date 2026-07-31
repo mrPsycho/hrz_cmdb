@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Configuration Management Database (CMDB) plugin for Redmine 6.1+. It allows tracking hardware and software inventory items (Configuration Items/CIs) and connecting them to Redmine tickets. The plugin is in active development (currently v0.7.4, MVP stage).
+This is a Configuration Management Database (CMDB) plugin for Redmine 6.1+. It allows tracking hardware and software inventory items (Configuration Items/CIs) and connecting them to Redmine tickets. The plugin is in active development (currently v0.8.0, beyond the MVP stage). The authoritative version is always the one declared in `init.rb`.
 
 ## Development Commands
 
@@ -23,7 +23,7 @@ RAILS_ENV=production bundle exec rake redmine:plugins:migrate NAME=hrz_cmdb VERS
 ```
 
 ### Plugin Development
-This plugin follows standard Redmine plugin development patterns. There are no automated tests yet. Manual testing is done through the Redmine web interface.
+This plugin follows standard Redmine plugin development patterns. Automated tests live in `test/` and are run with `bundle exec rake redmine:plugins:test NAME=hrz_cmdb` from the Redmine root. (Earlier revisions of this file stated that there were no automated tests — that is no longer true.) Manual testing is done through the Redmine web interface.
 
 ## Code Architecture
 
@@ -59,7 +59,17 @@ The plugin implements a dual hierarchy system:
 
 - **CmdbController**: Main CRUD operations for locations, CI classes, CIs, lifecycle statuses, and external systems. Provides tree_data endpoint for jsTree UI.
 - **CmdbBasicDataController**: Manages location hierarchy levels (basic data setup).
-- **IssueCisController**: Handles CI-Issue associations, provides available_cis endpoint.
+- **IssueCisController**: Handles CI-Issue associations, provides available_cis endpoint. Loads the issue through `Issue.visible`, so Redmine issue visibility rules apply on top of the project permission.
+
+### REST API
+
+Since v0.8.0 the three controllers above also serve external clients in JSON and XML. There is no separate API controller:
+- `accept_api_auth` at the top of each controller lists the API-reachable actions (API key or HTTP basic auth).
+- Each action branches with an early `return ... if api_request?` **before** its `respond_to` block. `format.api` is deliberately avoided because it aliases `any(:xml, :json)` and would capture the plugin's own AJAX calls, which send `Accept: application/json` without a format extension.
+- Responses are rendered by `*.api.rsb` builder templates; the serialisation itself lives in `render_api_<entity>(record, api)` methods in `app/helpers/cmdb_helper.rb` so index and show share one definition.
+- Collections paginate with `api_offset_and_limit` and emit `api_meta`.
+
+See `.github/instructions/redmine-rest-api.instructions.md` for the full rules.
 
 ### Permission System
 

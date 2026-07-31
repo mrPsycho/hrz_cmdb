@@ -1,12 +1,12 @@
 ---
 description: "Use when creating or editing any source file in the hrz_cmdb Redmine plugin: license headers, purpose comments, method documentation, database/column naming prefixes, and model callback conventions."
-applyTo: "**/*.{rb,erb,js,css}"
+applyTo: "**/*.{rb,erb,rsb,js,css}"
 ---
 # hrz_cmdb Source File Conventions
 
 ## 1. License header — mandatory, never modify
 
-Every `.rb`, `.erb`, `.js` and `.css` file starts with the AGPL v3 header.
+Every `.rb`, `.erb`, `.rsb`, `.js` and `.css` file starts with the AGPL v3 header.
 The canonical text is in [.header.txt](.header.txt); the rendered block is 91 characters
 wide and its last line ends with the `eohdr-#` marker.
 
@@ -20,8 +20,13 @@ Comment syntax per file type:
 |------|--------------------|-----------------|
 | `.rb`  | `#`      | `# Purpose: <description>` |
 | `.erb` | `<%# %>` | `<%# Purpose: <description> %>` |
+| `.rsb` | `#`      | `# Purpose: <description>` |
 | `.js`  | `//`     | `// Purpose: <description>` |
 | `.css` | `/* */`  | `/* Purpose: <description> */` |
+
+`.api.rsb` templates are Ruby, so they use `#`. Their **last line must be code, not a
+comment** — Redmine appends `; self.output_buffer = api.output` to the template source,
+and a trailing comment would swallow it.
 
 ## 2. Purpose comment — mandatory
 

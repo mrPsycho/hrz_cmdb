@@ -9,7 +9,7 @@ test/
 ├── fixtures/          # YAML test data for all models
 ├── functional/        # Controller tests
 ├── unit/             # Model and lib tests
-├── integration/      # End-to-end tests (future)
+├── integration/      # End-to-end tests, including api_test/ for the REST API
 ├── test_helper.rb    # Test configuration and utilities
 └── README.md         # This file
 ```
@@ -30,6 +30,11 @@ bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb
 ### Only Functional Tests (Controllers)
 ```bash
 bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb
+```
+
+### Only Integration Tests (REST API)
+```bash
+bundle exec rake redmine:plugins:test:integration NAME=hrz_cmdb
 ```
 
 ### Single Test File
@@ -79,6 +84,29 @@ bundle exec ruby plugins/hrz_cmdb/test/unit/hrzcm_ci_test.rb -n test_should_vali
   - Lifecycle Status operations
   - Permission checks for all actions
   - JSON response validation
+
+### Integration Tests
+
+REST API tests live in `integration/api_test/` and subclass `Redmine::ApiTest::Base`,
+which switches on the *Enable REST web service* setting and provides `credentials(login)`
+for HTTP basic auth.
+
+- **cmdb_api_test.rb** - Tests for the CmdbController API
+  - Anonymous (401), permission-denied (403) and authorised access
+  - Pagination meta (total_count, offset, limit) and the limit/offset parameters
+  - Filters (j_type_id, b_tag_serial)
+  - CRUD for locations and CIs including 201/204/404/422 status codes
+  - Index endpoints for CI classes, lifecycle statuses and external systems
+  - XML rendering
+
+- **cmdb_basic_data_api_test.rb** - Tests for the location hierarchy API
+  - Anonymous and permission-denied rejection
+  - Index with pagination meta, show, create, update
+  - 422 when a level is still in use or invalid
+
+- **issue_cis_api_test.rb** - Tests for the CIs of an issue
+  - 404 for an issue the user must not see
+  - Index, link and unlink including duplicate (422) and unknown CI (404)
 
 ## Test Fixtures
 
