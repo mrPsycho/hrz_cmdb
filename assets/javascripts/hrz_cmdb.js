@@ -613,74 +613,11 @@ var HrzCmdb = {
           console.log('Calling refreshTree()');
           self.refreshTree();
 
-          // Handle details area based on what was saved and which button was clicked
-          console.log('Determining what to do next - saveAsCopy:', saveAsCopy, 'continueEditing:', continueEditing);
-
-          if (saveAsCopy && response.id) {
-            console.log('Save as copy - loading new record for editing');
-            // For save as copy, load the newly created item for editing
-            if (form.attr('id') === 'location-form') {
-              self.loadDetails(response.id, 'location');
-            } else if (form.attr('id') === 'hierarchy-form') {
-              self.loadDetails('hierarchy_' + response.id, 'hierarchy');
-            } else if (form.attr('id') === 'ci-class-form') {
-              self.loadDetails('ci_class_' + response.id, 'ci_class');
-            } else if (form.attr('id') === 'ci-form') {
-              self.loadDetails('ci_' + response.id, 'ci');
-            } else if (form.attr('id') === 'lifecycle-status-form') {
-              self.loadDetails('lifecycle_status_' + response.id, 'lifecycle_status');
-            } else if (form.attr('id') === 'ext-sys-form') {
-              self.loadDetails('ext_sys_' + response.id, 'ext_sys');
-            }
-          } else if (!continueEditing) {
-            console.log('Normal save - clearing details');
-            // "Save" button - clear details
-            self.clearDetails();
-          } else if (response.id) {
-            console.log('Continue editing - reloading record');
-            // "Save and continue" button - load the saved item for editing
-            if (form.attr('id') === 'new-location-form') {
-              // For new location, load it as existing location for editing
-              self.loadDetails(response.id, 'location');
-            } else if (form.attr('id') === 'location-form') {
-              // For existing location, reload it
-              self.loadDetails(response.id, 'location');
-            } else if (form.attr('id') === 'new-hierarchy-form') {
-              // For new hierarchy, load it as existing hierarchy for editing
-              self.loadDetails('hierarchy_' + response.id, 'hierarchy');
-            } else if (form.attr('id') === 'hierarchy-form') {
-              // For existing hierarchy, reload it
-              self.loadDetails('hierarchy_' + response.id, 'hierarchy');
-            } else if (form.attr('id') === 'new-ci-class-form') {
-              // For new CI class, load it as existing CI class for editing
-              self.loadDetails('ci_class_' + response.id, 'ci_class');
-            } else if (form.attr('id') === 'ci-class-form') {
-              // For existing CI class, reload it
-              self.loadDetails('ci_class_' + response.id, 'ci_class');
-            } else if (form.attr('id') === 'new-ci-form') {
-              // For new CI, load it as existing CI for editing
-              self.loadDetails('ci_' + response.id, 'ci');
-            } else if (form.attr('id') === 'ci-form') {
-              // For existing CI, reload it
-              self.loadDetails('ci_' + response.id, 'ci');
-            } else if (form.attr('id') === 'new-lifecycle-status-form') {
-              // For new lifecycle status, load it as existing lifecycle status for editing
-              self.loadDetails('lifecycle_status_' + response.id, 'lifecycle_status');
-            } else if (form.attr('id') === 'lifecycle-status-form') {
-              // For existing lifecycle status, reload it
-              self.loadDetails('lifecycle_status_' + response.id, 'lifecycle_status');
-            } else if (form.attr('id') === 'new-ext-sys-form') {
-              // For new external system, load it as existing ext sys for editing
-              self.loadDetails('ext_sys_' + response.id, 'ext_sys');
-            } else if (form.attr('id') === 'ext-sys-form') {
-              // For existing external system, reload it
-              self.loadDetails('ext_sys_' + response.id, 'ext_sys');
-            }
-          } else if (isNewForm && continueEditing) {
-            // New form with continue but no ID returned - keep the form
-            // This shouldn't happen, but as fallback keep current view
+          // Every Save button now behaves like "Save and continue": reopen the
+          // saved record in the details pane instead of clearing it.
+          if (response.id) {
+            self.loadSavedRecord(form.attr('id'), response.id);
           } else {
-            // Default: clear details
             self.clearDetails();
           }
         } else {
@@ -711,6 +648,37 @@ var HrzCmdb = {
         }
       }
     });
+  },
+
+  // Reopens the record just saved by a create/update form in the details pane.
+  // Parameter formId: DOM id of the submitted form, e.g. 'ci-form' or 'new-ci-form'.
+  // Parameter id: Integer id returned by the server for the saved record.
+  // Falls back to clearDetails() for an unrecognised form id.
+  loadSavedRecord: function(formId, id) {
+    var baseId = (formId || '').replace(/^new-/, '');
+
+    switch (baseId) {
+      case 'location-form':
+        this.loadDetails(id, 'location');
+        break;
+      case 'hierarchy-form':
+        this.loadDetails('hierarchy_' + id, 'hierarchy');
+        break;
+      case 'ci-class-form':
+        this.loadDetails('ci_class_' + id, 'ci_class');
+        break;
+      case 'ci-form':
+        this.loadDetails('ci_' + id, 'ci');
+        break;
+      case 'lifecycle-status-form':
+        this.loadDetails('lifecycle_status_' + id, 'lifecycle_status');
+        break;
+      case 'ext-sys-form':
+        this.loadDetails('ext_sys_' + id, 'ext_sys');
+        break;
+      default:
+        this.clearDetails();
+    }
   },
 
   refreshTree: function() {
