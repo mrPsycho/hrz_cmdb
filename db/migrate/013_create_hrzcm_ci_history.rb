@@ -19,7 +19,7 @@
 class CreateHrzcmCiHistory < ActiveRecord::Migration[6.1]
   def change
     create_table :hrzcm_ci_history do |t|
-      t.integer :j_ci_id, null: false
+      t.bigint :j_ci_id, null: false
       t.string :b_action, null: false, limit: 50
       t.text :b_details
       t.integer :created_by
