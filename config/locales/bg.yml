@@ -78,6 +78,9 @@ bg:
     select_status: "Изберете статус на жизнения цикъл"
     select_assigned_user: "Изберете потребител"
 
+    assets:
+      new: "Създаване на нов актив"
+
     locations:
       title: "Локации"
       new: "Създаване на нова локация"

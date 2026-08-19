@@ -153,8 +153,17 @@ class CmdbController < ApplicationController
     # -------------------------------------------------------------------------
     # Root of the tree
     if params[:parent_id].blank?
-      # Add "Create new location" node if user has edit rights
+      # Add "Create new asset" and "Create new location" nodes if user has edit rights.
+      # The asset action is intentionally placed before the location action to prioritize
+      # new CI creation in the tree toolbar.
       if can_edit?
+        nodes << {
+          id: 'new_asset',
+          text: I18n.t('hrz_cmdb.assets.new'),
+          icon: 'icon-add',
+          children: false,
+          type: 'new_asset'
+        }
         nodes << {
           id: 'new_location',
           text: I18n.t('hrz_cmdb.locations.new'),

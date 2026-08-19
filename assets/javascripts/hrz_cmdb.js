@@ -88,7 +88,7 @@ var HrzCmdb = {
 
       // Add node icon
       var icon = $('<span class="node-icon"></span>');
-      if (node.type === 'new' || node.type === 'new_hierarchy') {
+      if (node.type === 'new' || node.type === 'new_hierarchy' || node.type === 'new_asset') {
         icon.addClass('icon-add');
       } else if (node.children) {
         icon.addClass('icon-folder');
@@ -235,7 +235,19 @@ var HrzCmdb = {
     var self = this;
     var detailsContainer = $('#cmdb-details');
 
-    if (nodeType === 'new') {
+    if (nodeType === 'new_asset') {
+      // Load new asset form
+      $.ajax({
+        url: '/cmdb/new_ci',
+        success: function(html) {
+          detailsContainer.html(html);
+        },
+        error: function(xhr) {
+          console.error('Failed to load new asset form:', xhr);
+          detailsContainer.html('<div class="flash error">Failed to load form. Please check your permissions.</div>');
+        }
+      });
+    } else if (nodeType === 'new') {
       // Load new location form
       $.ajax({
         url: '/cmdb/new_location',

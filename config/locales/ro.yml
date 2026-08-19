@@ -78,6 +78,9 @@ ro:
     select_status: "Selectați starea ciclului de viață"
     select_assigned_user: "Selectați utilizatorul"
 
+    assets:
+      new: "Creare nou asset"
+
     locations:
       title: "Locații"
       new: "Creați o locație nouă"

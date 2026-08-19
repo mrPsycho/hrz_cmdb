@@ -78,6 +78,9 @@ hu:
     select_status: "Életciklus állapot kiválasztása"
     select_assigned_user: "Felhasználó kiválasztása"
 
+    assets:
+      new: "Új asset létrehozása"
+
     locations:
       title: "Helyszínek"
       new: "Új helyszín létrehozása"

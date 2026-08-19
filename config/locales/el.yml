@@ -78,6 +78,9 @@ el:
     select_status: "Επιλέξτε κατάσταση κύκλου ζωής"
     select_assigned_user: "Επιλέξτε χρήστη"
 
+    assets:
+      new: "Δημιουργία νέου asset"
+
     locations:
       title: "Τοποθεσίες"
       new: "Δημιουργία νέας τοποθεσίας"

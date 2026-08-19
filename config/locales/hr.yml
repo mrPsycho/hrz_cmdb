@@ -78,6 +78,9 @@ hr:
     select_status: "Odaberite status životnog ciklusa"
     select_assigned_user: "Odaberite korisnika"
 
+    assets:
+      new: "Kreiraj novu imovinu"
+
     locations:
       title: "Lokacije"
       new: "Stvori novu lokaciju"

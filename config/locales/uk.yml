@@ -78,6 +78,9 @@ uk:
     select_status: "Виберіть статус життєвого циклу"
     select_assigned_user: "Виберіть користувача"
 
+    assets:
+      new: "Створити новий актив"
+
     locations:
       title: "Локації"
       new: "Створити нову локацію"

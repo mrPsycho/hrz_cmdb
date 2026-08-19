@@ -69,6 +69,9 @@ pl:
     select_status: "Wybierz status cyklu życia"
     select_assigned_user: "Wybierz użytkownika"
 
+    assets:
+      new: "Utwórz nowy zasób"
+
     locations:
       title: "Lokalizacje"
       new: "Utwórz nową lokalizację"

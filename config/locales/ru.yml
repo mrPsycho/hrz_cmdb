@@ -78,6 +78,9 @@ ru:
     select_status: "Выберите статус жизненного цикла"
     select_assigned_user: "Выберите пользователя"
 
+    assets:
+      new: "Создать новый актив"
+
     locations:
       title: "Локации"
       new: "Создать новую локацию"

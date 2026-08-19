@@ -78,6 +78,9 @@ tr:
     select_status: "Yaşam döngüsü durumu seçin"
     select_assigned_user: "Kullanıcı seçin"
 
+    assets:
+      new: "Yeni varlık oluştur"
+
     locations:
       title: "Konumlar"
       new: "Yeni konum oluştur"

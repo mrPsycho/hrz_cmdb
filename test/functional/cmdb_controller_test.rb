@@ -62,6 +62,17 @@ class CmdbControllerTest < ActionController::TestCase
     assert json.any? { |node| node['id'] == 'cis_by_class' }
   end
 
+  test "should include new asset action before new location action" do
+    @request.session[:user_id] = @user_with_edit.id
+    get :tree_data, format: :json
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    ids = json.map { |node| node['id'] }
+    assert ids.index('new_asset') < ids.index('new_location')
+    assert_equal 'Create new asset', json[ids.index('new_asset')]['text']
+  end
+
   test "should get tree_data for location hierarchy" do
     @request.session[:user_id] = @user_with_view.id
     get :tree_data, params: { parent_id: 'location_hierarchy' }, format: :json

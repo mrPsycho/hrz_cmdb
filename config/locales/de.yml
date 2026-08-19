@@ -69,6 +69,9 @@ de:
     select_status: "Lifecycle-Status auswählen"
     select_assigned_user: "Benutzer auswählen"
 
+    assets:
+      new: "Neues Asset erstellen"
+
     locations:
       title: "Standorte"
       new: "Neuen Ort erstellen"
