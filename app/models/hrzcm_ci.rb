@@ -33,6 +33,7 @@ class HrzcmCi < ActiveRecord::Base
 
   has_many :ci_ext_mappings, class_name: 'HrzcmCiExt', foreign_key: 'j_ci_id', dependent: :destroy
   has_many :ext_systems, through: :ci_ext_mappings, source: :ext_sys, class_name: 'HrzcmExtSys'
+  has_many :history_entries, class_name: 'HrzcmCiHistory', foreign_key: 'j_ci_id', dependent: :destroy
 
   # Validations
   validates :j_ci_class_id, presence: true
@@ -53,6 +54,8 @@ class HrzcmCi < ActiveRecord::Base
   # Callbacks
   before_create :set_creator
   before_save :set_updater
+  after_create :record_creation_history
+  after_update :record_update_history
 
   # Returns the display name for this CI, prioritizing abbreviated name.
   # Returns: String with b_name_abbr, b_name_full, or fallback "CI #id"
@@ -90,5 +93,22 @@ class HrzcmCi < ActiveRecord::Base
   def set_updater
     self.updated_by = User.current&.id if User.current
     self.updated_on = Time.current
+  end
+
+  # Creates a history entry after a new asset is saved.
+  # Called automatically after_create.
+  # Side effects: inserts a CI change history row with the action name and current user.
+  def record_creation_history
+    HrzcmCiHistory.record(self, action: 'created', details: 'Asset created')
+  end
+
+  # Creates a history entry after an asset is updated.
+  # Called automatically after_update.
+  # Side effects: inserts a CI change history row describing the updated fields.
+  def record_update_history
+    return if saved_changes.empty?
+
+    changed_fields = saved_changes.keys - %w[created_on updated_on created_by updated_by]
+    HrzcmCiHistory.record(self, action: 'updated', details: changed_fields.empty? ? 'Asset updated' : changed_fields.join(', '))
   end
 end

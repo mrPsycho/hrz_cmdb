@@ -183,6 +183,18 @@ hr:
       at: "u"
       new_record: "Novi zapis (još nije spremljen)"
 
+    history:
+      title: "Povijest promjena"
+      empty: "Nema zabilježenih promjena"
+      unknown_author: "Nepoznato"
+      action:
+        created: "Kreirano"
+        updated: "Ažurirano"
+      columns:
+        date: "Datum"
+        author: "Autor promjene"
+        action: "Akcija"
+
     buttons:
       save: "Spremi promjene"
       save_continue: "Spremi promjene, nastavi"

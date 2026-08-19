@@ -183,6 +183,18 @@ ro:
       at: "la"
       new_record: "Înregistrare nouă (încă nesalvată)"
 
+    history:
+      title: "Istoricul modificărilor"
+      empty: "Nu există modificări înregistrate încă"
+      unknown_author: "Necunoscut"
+      action:
+        created: "Creat"
+        updated: "Actualizat"
+      columns:
+        date: "Data"
+        author: "Autorul modificării"
+        action: "Acțiune"
+
     buttons:
       save: "Salvați modificările"
       save_continue: "Salvați modificările, continuați"

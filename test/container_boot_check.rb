@@ -13,23 +13,30 @@
 # You should have received a copy of the GNU Affero General Public License                  #
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.                    #
 #-------------------------------------------------------------------------------------eohdr-#
-# Purpose: Database migration creating the hrzcm_ci_ext junction table with composite primary key.
-#          Maps CIs to their identifiers in external systems for cross-system integration.
+# Purpose: Post-migration check executed by rails runner inside the containerised test run.
+#          Asserts that every hrz_cmdb table exists, that the plugin is registered and that
+#          the application eager loads, i.e. that Redmine can actually start with the plugin.
 
-class CreateHrzcmCiExt < ActiveRecord::Migration[6.1]
-  def change
-    # Composite primary key declared here, because SQLite cannot add one via ALTER TABLE.
-    create_table :hrzcm_ci_ext, primary_key: [:j_ci_id, :j_ext_sys_id, :b_key_ext] do |t|
-      t.bigint :j_ci_id, null: false
-      t.bigint :j_ext_sys_id, null: false
-      t.string :b_key_ext, limit: 50, null: false
-    end
+# Tables that the plugin migrations must have created.
+PLUGIN_TABLES = %w[
+  hrzcm_locat_hier
+  hrzcm_location
+  hrzcm_ci_class
+  hrzcm_lifecycle_status
+  hrzcm_ci
+  hrzcm_ci_issues
+  hrzcm_ext_sys
+  hrzcm_ci_ext
+  hrzcm_ci_history
+].freeze
 
-    add_foreign_key :hrzcm_ci_ext, :hrzcm_ci, column: :j_ci_id
-    add_foreign_key :hrzcm_ci_ext, :hrzcm_ext_sys, column: :j_ext_sys_id
+missing = PLUGIN_TABLES.reject { |table| ActiveRecord::Base.connection.table_exists?(table) }
+abort("SCHEMA_FAILED missing_tables=#{missing.join(',')}") if missing.any?
 
-    add_index :hrzcm_ci_ext, :j_ci_id
-    add_index :hrzcm_ci_ext, :j_ext_sys_id
-    add_index :hrzcm_ci_ext, [:j_ext_sys_id, :b_key_ext], name: 'index_hrzcm_ci_ext_on_ext_sys_and_key'
-  end
-end
+Rails.application.eager_load!
+
+plugin = Redmine::Plugin.registered_plugins[:hrz_cmdb]
+abort('BOOT_FAILED plugin hrz_cmdb is not registered') if plugin.nil?
+
+puts "SCHEMA_OK env=#{Rails.env} tables=#{PLUGIN_TABLES.size}"
+puts "BOOT_OK plugin=hrz_cmdb version=#{plugin.version}"

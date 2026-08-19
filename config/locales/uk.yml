@@ -183,6 +183,18 @@ uk:
       at: "о"
       new_record: "Новий запис (ще не збережено)"
 
+    history:
+      title: "Історія змін"
+      empty: "Ще немає записаних змін"
+      unknown_author: "Невідомо"
+      action:
+        created: "Створено"
+        updated: "Оновлено"
+      columns:
+        date: "Дата"
+        author: "Автор зміни"
+        action: "Дія"
+
     buttons:
       save: "Зберегти зміни"
       save_continue: "Зберегти зміни, продовжити"

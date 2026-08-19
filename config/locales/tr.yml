@@ -183,6 +183,18 @@ tr:
       at: "tarihinde"
       new_record: "Yeni kayıt (henüz kaydedilmedi)"
 
+    history:
+      title: "Değişiklik geçmişi"
+      empty: "Henüz kayıtlı değişiklik yok"
+      unknown_author: "Bilinmeyen"
+      action:
+        created: "Oluşturuldu"
+        updated: "Güncellendi"
+      columns:
+        date: "Tarih"
+        author: "Değişiklik yazarı"
+        action: "Eylem"
+
     buttons:
       save: "Değişiklikleri kaydet"
       save_continue: "Değişiklikleri kaydet, devam et"

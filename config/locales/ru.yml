@@ -183,6 +183,18 @@ ru:
       at: "в"
       new_record: "Новая запись (еще не сохранена)"
 
+    history:
+      title: "История изменений"
+      empty: "Изменения ещё не записаны"
+      unknown_author: "Неизвестно"
+      action:
+        created: "Создано"
+        updated: "Обновлено"
+      columns:
+        date: "Дата"
+        author: "Автор изменения"
+        action: "Действие"
+
     buttons:
       save: "Сохранить изменения"
       save_continue: "Сохранить изменения, продолжить"

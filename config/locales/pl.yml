@@ -165,6 +165,18 @@ pl:
       j_location_default_id: "Jeśli system zewnętrzny zawiera tylko CI z określonej lokalizacji lub nie dostarcza informacji o lokalizacji, lokalizacja określona tutaj będzie używana dla wszystkich CI zgłaszanych przez ten system zewnętrzny."
       select_user: "Wybierz użytkownika"
 
+    history:
+      title: "Historia zmian"
+      empty: "Brak zapisanych zmian"
+      unknown_author: "Nieznany"
+      action:
+        created: "Utworzono"
+        updated: "Zaktualizowano"
+      columns:
+        date: "Data"
+        author: "Autor zmiany"
+        action: "Akcja"
+
     buttons:
       save: "Zapisz zmiany"
       save_continue: "Zapisz zmiany, kontynuuj"

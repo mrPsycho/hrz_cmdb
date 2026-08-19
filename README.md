@@ -18,6 +18,41 @@ A Configuration Management DataBase (CMDB) plugin for Redmine 6.1+ where you can
 
 This is the standard Redmine plugin installation procedure.
 
+### Testing in a Redmine container
+
+If Redmine is running inside a container, prefer Podman and execute the test commands
+inside the container so the Redmine app and Bundler environment match the runtime
+stack.
+
+```bash
+# ensure the plugin is mounted into the Redmine container
+ls /usr/src/redmine/plugins/hrz_cmdb
+
+# run the full plugin test suite in the Redmine container
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test NAME=hrz_cmdb'
+
+# run only the functional tests
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb'
+
+# run only the unit tests
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb'
+```
+
+For a disposable test run, use the bundled script. It starts a Podman Redmine container
+on SQLite, installs the plugin, migrates the databases, runs the test suite, verifies
+that Redmine boots with the plugin and removes the container afterwards:
+
+```bash
+./test/run_container_tests.sh
+```
+
+Podman needs the fully qualified image reference, which the script uses by default
+(`docker.io/library/redmine:latest`, override with `REDMINE_IMAGE`).
+
+The plugin path inside the container must be `/usr/src/redmine/plugins/hrz_cmdb`.
+This is the container-safe equivalent of running the plugin tests from a local
+Redmine checkout.
+
 1. Copy the plugin into the Redmine plugin dirctory:
 
    a) If it is already in the current directory:

@@ -55,19 +55,68 @@ test_should_deny_create_ci_without_edit_permission
 
 ## Commands
 
+The supported way to run the suite is the containerised script — it is the only path that
+is verified to work end to end:
+
 ```bash
-# All plugin tests
-bundle exec rake redmine:plugins:test NAME=hrz_cmdb
-
-# Units only
-bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb
-
-# Functionals only
-bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb
+./test/run_container_tests.sh
 ```
+
+It starts a disposable Podman Redmine container with SQLite, mounts the plugin at
+`/usr/src/redmine/plugins/hrz_cmdb`, installs the gems, migrates the test **and**
+production databases, runs the plugin tests, verifies that Redmine boots with the plugin
+registered, and removes the container on every exit path — including failures.
+
+Markers to look for in the output:
+
+| Marker | Meaning |
+|---|---|
+| `SCHEMA_OK env=… tables=9` | all plugin tables were created |
+| `BOOT_OK plugin=hrz_cmdb version=…` | Redmine starts with the plugin loaded |
+| `PRE_PUSH_OK` / `PRE_PUSH_FAILED` | final verdict, mirrored in the exit code |
+
+Overrides: `REDMINE_IMAGE` (default `docker.io/library/redmine:latest`) and
+`REDMINE_TEST_CONTAINER` (default `hrz-redmine-test`).
+
+**Podman needs fully qualified image references** — a short name like `redmine:latest`
+fails with `short-name … did not resolve to an alias`.
+
+### Run before every push
+
+Delegate the whole run to the [pre-push-tests](../agents/pre-push-tests.agent.md) agent,
+which is pinned to Claude Haiku, so a push is always preceded by a real test run:
+
+```
+@pre-push-tests
+```
+
+### Running the rake tasks directly
+
+Inside an already running Redmine container:
+
+```bash
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test NAME=hrz_cmdb'
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb'
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb'
+```
+
+That container needs a `test:` entry in `config/database.yml` and the test-group gems
+(`bundle config unset without && bundle install`); the official image ships neither,
+because it generates `config/database.yml` only through its own entrypoint.
 
 Run from the Redmine root, not from the plugin directory. Report actual command output —
 never claim tests pass without having run them.
+
+## Migrations must stay SQLite-compatible
+
+The containerised run uses SQLite, so migrations may not use vendor-specific DDL.
+`ALTER TABLE … ADD PRIMARY KEY` is not valid in SQLite; declare composite keys through
+`create_table :t, primary_key: [:a, :b]` instead.
+
+Note that Redmine 6 already applies plugin migrations during the core `db:migrate` run, so
+a subsequent `redmine:plugins:migrate` can report "table already exists". The script
+therefore asserts the resulting schema via [test/container_boot_check.rb](../../test/container_boot_check.rb)
+rather than trusting that task's exit code.
 
 ## Fixtures
 

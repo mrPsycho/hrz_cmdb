@@ -155,6 +155,57 @@
   max-width: 800px;
 }
 
+.ci-detail-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.ci-detail-main {
+  flex: 2;
+  min-width: 0;
+}
+
+.ci-detail-sidebar {
+  flex: 0 0 360px;
+  min-width: 260px;
+}
+
+.ci-history-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.ci-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ci-history-table th,
+.ci-history-table td {
+  padding: 6px 8px;
+  border: 1px solid #d7d7d7;
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.ci-history-table thead th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+.ci-history-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.ci-history-table td.empty {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
 .form-group {
   margin-bottom: 10px;
   display: flex;

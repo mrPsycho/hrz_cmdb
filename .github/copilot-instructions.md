@@ -58,4 +58,26 @@ bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb                       
 bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb                          # functionals only
 ```
 
+When Redmine is running in Podman, execute the same commands inside the container
+instead of on the host. The plugin must be visible at
+`/usr/src/redmine/plugins/hrz_cmdb` inside that container:
+
+```bash
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test NAME=hrz_cmdb'
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:functionals NAME=hrz_cmdb'
+podman exec -it <redmine-container> bash -lc 'cd /usr/src/redmine && bundle exec rake redmine:plugins:test:units NAME=hrz_cmdb'
+```
+
+The supported, verified way to test is the containerised script, which starts a
+disposable Podman Redmine container on SQLite, installs the plugin, migrates, runs the
+suite, checks that Redmine still boots and always removes the container:
+
+```bash
+./test/run_container_tests.sh
+```
+
+Run it before every push, or delegate it to the Haiku-pinned
+[pre-push-tests](.github/agents/pre-push-tests.agent.md) agent. Podman requires fully
+qualified image references such as `docker.io/library/redmine:latest`.
+
 User-visible changes bump `version` in [init.rb](init.rb).

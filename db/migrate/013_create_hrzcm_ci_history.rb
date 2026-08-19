@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Franz Apeltauer                                                        #
 #                                                                                           #
 # This program is free software: you can redistribute it and/or modify it under the terms   #
-# of the GNU Affero General Public License as published by the Free Software Foundation,    #
+# of the GNU Affero General Public License as published by the Free Software Foundation,     #
 # either version 3 of the License, or (at your option) any later version.                   #
 #                                                                                           #
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; #
@@ -13,23 +13,27 @@
 # You should have received a copy of the GNU Affero General Public License                  #
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.                    #
 #-------------------------------------------------------------------------------------eohdr-#
-# Purpose: Database migration creating the hrzcm_ci_ext junction table with composite primary key.
-#          Maps CIs to their identifiers in external systems for cross-system integration.
+# Purpose: Database migration creating the asset change log table.
+#          Stores each asset creation/update as a history event with timestamp and user.
 
-class CreateHrzcmCiExt < ActiveRecord::Migration[6.1]
+class CreateHrzcmCiHistory < ActiveRecord::Migration[6.1]
   def change
-    # Composite primary key declared here, because SQLite cannot add one via ALTER TABLE.
-    create_table :hrzcm_ci_ext, primary_key: [:j_ci_id, :j_ext_sys_id, :b_key_ext] do |t|
-      t.bigint :j_ci_id, null: false
-      t.bigint :j_ext_sys_id, null: false
-      t.string :b_key_ext, limit: 50, null: false
+    create_table :hrzcm_ci_history do |t|
+      t.integer :j_ci_id, null: false
+      t.string :b_action, null: false, limit: 50
+      t.text :b_details
+      t.integer :created_by
+      t.datetime :created_on, null: false
+      t.integer :updated_by
+      t.datetime :updated_on
+
+      t.timestamps null: false
     end
 
-    add_foreign_key :hrzcm_ci_ext, :hrzcm_ci, column: :j_ci_id
-    add_foreign_key :hrzcm_ci_ext, :hrzcm_ext_sys, column: :j_ext_sys_id
-
-    add_index :hrzcm_ci_ext, :j_ci_id
-    add_index :hrzcm_ci_ext, :j_ext_sys_id
-    add_index :hrzcm_ci_ext, [:j_ext_sys_id, :b_key_ext], name: 'index_hrzcm_ci_ext_on_ext_sys_and_key'
+    add_index :hrzcm_ci_history, :j_ci_id
+    add_index :hrzcm_ci_history, [:j_ci_id, :created_on]
+    add_foreign_key :hrzcm_ci_history, :hrzcm_ci, column: :j_ci_id
+    add_foreign_key :hrzcm_ci_history, :users, column: :created_by
+    add_foreign_key :hrzcm_ci_history, :users, column: :updated_by
   end
 end

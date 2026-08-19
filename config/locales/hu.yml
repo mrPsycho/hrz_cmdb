@@ -183,6 +183,18 @@ hu:
       at: "időpontban"
       new_record: "Új rekord (még nincs mentve)"
 
+    history:
+      title: "Változási előzmények"
+      empty: "Még nincs rögzített változás"
+      unknown_author: "Ismeretlen"
+      action:
+        created: "Létrehozva"
+        updated: "Frissítve"
+      columns:
+        date: "Dátum"
+        author: "Módosító"
+        action: "Művelet"
+
     buttons:
       save: "Változások mentése"
       save_continue: "Változások mentése, folytatás"
