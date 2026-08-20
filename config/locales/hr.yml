@@ -196,8 +196,7 @@ hr:
         action: "Akcija"
 
     buttons:
-      save: "Spremi promjene"
-      save_continue: "Spremi promjene, nastavi"
+      save: "Spremi"
       save_as_copy: "Spremi kao kopiju"
       cancel: "Odustani"
       create: "Stvori novi unos"

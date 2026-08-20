@@ -196,8 +196,7 @@ hu:
         action: "Művelet"
 
     buttons:
-      save: "Változások mentése"
-      save_continue: "Változások mentése, folytatás"
+      save: "Mentés"
       cancel: "Mégse"
       create: "Új bejegyzés létrehozása"
       save_as_copy: "Mentés másolatként"

@@ -178,8 +178,7 @@ pl:
         action: "Akcja"
 
     buttons:
-      save: "Zapisz zmiany"
-      save_continue: "Zapisz zmiany, kontynuuj"
+      save: "Zapisz"
       save_as_copy: "Zapisz jako kopię"
       cancel: "Anuluj"
       create: "Utwórz nowy wpis"

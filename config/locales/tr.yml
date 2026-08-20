@@ -196,8 +196,7 @@ tr:
         action: "Eylem"
 
     buttons:
-      save: "Değişiklikleri kaydet"
-      save_continue: "Değişiklikleri kaydet, devam et"
+      save: "Kaydet"
       cancel: "İptal"
       create: "Yeni giriş oluştur"
       save_as_copy: "Kopya olarak kaydet"

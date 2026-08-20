@@ -187,8 +187,7 @@ en:
         action: "Action"
 
     buttons:
-      save: "Save changes"
-      save_continue: "Save changes, continue"
+      save: "Save"
       save_as_copy: "Save as copy"
       cancel: "Cancel"
       create: "Create new entry"

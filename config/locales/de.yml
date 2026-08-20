@@ -187,8 +187,7 @@ de:
         action: "Aktion"
 
     buttons:
-      save: "Änderungen speichern"
-      save_continue: "Änderungen speichern, weiter"
+      save: "Speichern"
       save_as_copy: "Als Kopie speichern"
       cancel: "Abbruch"
       create: "Daten neu eintragen"

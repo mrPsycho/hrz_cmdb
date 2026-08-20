@@ -196,8 +196,7 @@ ro:
         action: "Acțiune"
 
     buttons:
-      save: "Salvați modificările"
-      save_continue: "Salvați modificările, continuați"
+      save: "Salvați"
       save_as_copy: "Salvați ca copie"
       cancel: "Anulați"
       create: "Creați intrare nouă"

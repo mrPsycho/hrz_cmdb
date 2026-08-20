@@ -63,11 +63,11 @@ var IssueCis = {
           if (expander.hasClass('collapsed')) {
             self.expandNode(node);
             expander.removeClass('collapsed').addClass('expanded');
-            expander.text('▼');
+            expander.text('\u25BC');
           } else {
             self.collapseNode(node);
             expander.removeClass('expanded').addClass('collapsed');
-            expander.text('▶');
+            expander.text('\u25B6');
           }
         }
       }
@@ -82,11 +82,11 @@ var IssueCis = {
       if (expander.hasClass('collapsed')) {
         self.expandNode(node);
         expander.removeClass('collapsed').addClass('expanded');
-        expander.text('▼');
+        expander.text('\u25BC');
       } else {
         self.collapseNode(node);
         expander.removeClass('expanded').addClass('collapsed');
-        expander.text('▶');
+        expander.text('\u25B6');
       }
     });
   },
@@ -151,7 +151,7 @@ var IssueCis = {
 
       // Add expand/collapse icon for folders
       if (node.children) {
-        var expander = $('<span class="expander collapsed">▶</span>');
+        var expander = $('<span class="expander collapsed">\u25B6</span>');
         nodeContent.append(expander);
       } else {
         nodeContent.append('<span class="spacer"></span>');

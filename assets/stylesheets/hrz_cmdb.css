@@ -106,15 +106,18 @@
 }
 
 .node-icon.icon-folder::before {
-  content: "📁";
+  /* U+1F4C1 FILE FOLDER, escaped so rendering doesn't depend on the response charset */
+  content: "\01F4C1";
 }
 
 .node-icon.icon-page::before {
-  content: "📄";
+  /* U+1F4C4 PAGE FACING UP, escaped so rendering doesn't depend on the response charset */
+  content: "\01F4C4";
 }
 
 .node-icon.icon-add::before {
-  content: "➕";
+  /* U+2795 HEAVY PLUS SIGN, escaped so rendering doesn't depend on the response charset */
+  content: "\002795";
 }
 
 .node-text {
@@ -298,7 +301,8 @@
 }
 
 .form-group .url-open-icon::before {
-  content: "🔗";
+  /* U+1F517 LINK SYMBOL, escaped so rendering doesn't depend on the response charset */
+  content: "\01F517";
   font-size: 16px;
 }
 
