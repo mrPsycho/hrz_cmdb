@@ -190,10 +190,13 @@ bg:
       action:
         created: "Създаден"
         updated: "Актуализиран"
+        issue_linked: "Свързано със задача"
+        issue_unlinked: "Връзката със задача е премахната"
       columns:
         date: "Дата"
         author: "Автор на промяната"
         action: "Действие"
+        details: "Промени"
 
     buttons:
       save: "Запазване"

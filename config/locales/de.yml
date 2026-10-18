@@ -181,10 +181,13 @@ de:
       action:
         created: "Erstellt"
         updated: "Aktualisiert"
+        issue_linked: "Mit Ticket verknüpft"
+        issue_unlinked: "Verknüpfung mit Ticket entfernt"
       columns:
         date: "Datum"
         author: "Autor der Änderung"
         action: "Aktion"
+        details: "Änderungen"
 
     buttons:
       save: "Speichern"

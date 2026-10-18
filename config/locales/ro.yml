@@ -190,10 +190,13 @@ ro:
       action:
         created: "Creat"
         updated: "Actualizat"
+        issue_linked: "Asociat cu tichetul"
+        issue_unlinked: "Dezasociat de tichet"
       columns:
         date: "Data"
         author: "Autorul modificării"
         action: "Acțiune"
+        details: "Modificări"
 
     buttons:
       save: "Salvați"

@@ -31,6 +31,8 @@ class HrzcmCiIssue < ActiveRecord::Base
 
   # Callbacks
   before_create :set_creator
+  after_create :record_link_history
+  after_destroy :record_unlink_history
 
   private
 
@@ -40,5 +42,22 @@ class HrzcmCiIssue < ActiveRecord::Base
   def set_creator
     self.created_by ||= User.current&.id
     self.created_on ||= Time.current
+  end
+
+  # Adds an 'issue_linked' entry to the change history of the CI.
+  # Called automatically after_create.
+  # Side effects: inserts a row into hrzcm_ci_history
+  def record_link_history
+    HrzcmCiHistory.record_issue_link(ci, issue_id, HrzcmCiHistory::ACTION_ISSUE_LINKED) if ci
+  end
+
+  # Adds an 'issue_unlinked' entry to the change history of the CI. Also runs when the issue
+  # is deleted. Skipped when the CI itself is being deleted, because its history goes with it.
+  # Called automatically after_destroy.
+  # Side effects: inserts a row into hrzcm_ci_history
+  def record_unlink_history
+    return if ci.nil? || destroyed_by_association&.active_record == HrzcmCi
+
+    HrzcmCiHistory.record_issue_link(ci, issue_id, HrzcmCiHistory::ACTION_ISSUE_UNLINKED)
   end
 end

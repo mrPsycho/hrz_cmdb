@@ -107,4 +107,18 @@ class Redmine::ApiTest::IssueCisApiTest < Redmine::ApiTest::Base
     delete '/issues/1/cis/3.json', :headers => @jsmith
     assert_response :not_found
   end
+
+  test "should record linking and unlinking in the ci change history" do
+    post '/issues/1/cis.json', :params => { :ci_id => 2 }, :headers => @jsmith
+    assert_response :created
+    entry = HrzcmCiHistory.where(:j_ci_id => 2).ordered_by_date.first
+    assert_equal HrzcmCiHistory::ACTION_ISSUE_LINKED, entry.b_action
+    assert_equal User.find_by_login('jsmith').id, entry.created_by
+    assert_equal 1, entry.structured_details['issue_id']
+
+    delete '/issues/1/cis/2.json', :headers => @jsmith
+    assert_response :no_content
+    entry = HrzcmCiHistory.where(:j_ci_id => 2).ordered_by_date.first
+    assert_equal HrzcmCiHistory::ACTION_ISSUE_UNLINKED, entry.b_action
+  end
 end

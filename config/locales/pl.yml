@@ -172,10 +172,13 @@ pl:
       action:
         created: "Utworzono"
         updated: "Zaktualizowano"
+        issue_linked: "Powiązano z zagadnieniem"
+        issue_unlinked: "Usunięto powiązanie z zagadnieniem"
       columns:
         date: "Data"
         author: "Autor zmiany"
         action: "Akcja"
+        details: "Zmiany"
 
     buttons:
       save: "Zapisz"

@@ -190,10 +190,13 @@ tr:
       action:
         created: "Oluşturuldu"
         updated: "Güncellendi"
+        issue_linked: "İş ile ilişkilendirildi"
+        issue_unlinked: "İş ile ilişkisi kaldırıldı"
       columns:
         date: "Tarih"
         author: "Değişiklik yazarı"
         action: "Eylem"
+        details: "Değişiklikler"
 
     buttons:
       save: "Kaydet"

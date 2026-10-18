@@ -190,10 +190,13 @@ hr:
       action:
         created: "Kreirano"
         updated: "Ažurirano"
+        issue_linked: "Povezano s predmetom"
+        issue_unlinked: "Veza s predmetom uklonjena"
       columns:
         date: "Datum"
         author: "Autor promjene"
         action: "Akcija"
+        details: "Promjene"
 
     buttons:
       save: "Spremi"

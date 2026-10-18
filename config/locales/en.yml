@@ -181,10 +181,13 @@ en:
       action:
         created: "Created"
         updated: "Updated"
+        issue_linked: "Linked to issue"
+        issue_unlinked: "Unlinked from issue"
       columns:
         date: "Date"
         author: "Author of change"
         action: "Action"
+        details: "Changes"
 
     buttons:
       save: "Save"

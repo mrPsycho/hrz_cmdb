@@ -190,10 +190,13 @@ el:
       action:
         created: "Δημιουργήθηκε"
         updated: "Ενημερώθηκε"
+        issue_linked: "Συνδέθηκε με ζήτημα"
+        issue_unlinked: "Αποσυνδέθηκε από ζήτημα"
       columns:
         date: "Ημερομηνία"
         author: "Συγγραφέας αλλαγής"
         action: "Ενέργεια"
+        details: "Αλλαγές"
 
     buttons:
       save: "Αποθήκευση"

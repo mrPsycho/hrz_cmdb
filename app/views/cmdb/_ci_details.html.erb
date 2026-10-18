@@ -170,6 +170,7 @@
                     <th><%= l('hrz_cmdb.history.columns.date') %></th>
                     <th><%= l('hrz_cmdb.history.columns.author') %></th>
                     <th><%= l('hrz_cmdb.history.columns.action') %></th>
+                    <th><%= l('hrz_cmdb.history.columns.details') %></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,12 +180,13 @@
                       <tr>
                         <td><%= format_time(entry.created_on) %></td>
                         <td><%= entry.creator&.login || entry.updater&.login || l('hrz_cmdb.history.unknown_author') %></td>
-                        <td><%= entry.b_action.present? ? entry.b_action : l('hrz_cmdb.history.action.updated') %></td>
+                        <td><%= ci_history_action_label(entry) %></td>
+                        <td><%= format_ci_history_details(entry) %></td>
                       </tr>
                     <% end %>
                   <% else %>
                     <tr>
-                      <td colspan="3" class="empty"><%= l('hrz_cmdb.history.empty') %></td>
+                      <td colspan="4" class="empty"><%= l('hrz_cmdb.history.empty') %></td>
                     </tr>
                   <% end %>
                 </tbody>

@@ -1,0 +1,11 @@
+# CI change history entries
+# Entry in the plain text format written before version 0.9.3: comma separated column names.
+legacy_update:
+  id: 1
+  j_ci_id: 1        # web_server
+  b_action: updated
+  b_details: b_name_full, j_location_id
+  created_by: 1
+  created_on: 2025-01-02 10:00:00
+  updated_by: 1
+  updated_on: 2025-01-02 10:00:00

@@ -15,6 +15,7 @@
 #-------------------------------------------------------------------------------------eohdr-#
 # Purpose: View helper methods for CMDB permission checks in views and controllers.
 #          Provides convenient methods to check user's view, edit, and basic_data permissions.
+#          Also renders CMDB records for the REST API and formats the CI change history.
 
 module CmdbHelper
   # Checks if current user can view CMDB data.
@@ -278,5 +279,83 @@ module CmdbHelper
     api.created_on record.created_on
     api.updated_on record.updated_on
     nil
+  end
+
+  # Returns the translated name of the action of a CI history entry.
+  # Parameter entry: HrzcmCiHistory instance, b_action is one of
+  #   * 'created' / 'updated' ................... asset created / changed
+  #   * 'issue_linked' / 'issue_unlinked' ....... asset linked to / unlinked from an issue
+  #   * blank ................................... treated as 'updated'
+  #   * any other value ......................... returned untranslated
+  # Returns: String with the translated action
+  def ci_history_action_label(entry)
+    action = entry.b_action.presence || HrzcmCiHistory::ACTION_UPDATED
+    l("hrz_cmdb.history.action.#{action}", :default => action)
+  end
+
+  # Formats the details of a CI history entry for the history table, one change per line,
+  # using Redmine's own journal phrases ("Location changed from A to B").
+  # Parameter entry: HrzcmCiHistory instance
+  #   * JSON 'changes' entry ..... one line per changed field with old and new value
+  #   * JSON 'issue_id' entry .... link to the issue if the current user may see it, else '#id'
+  #   * legacy plain text ........ comma separated column names translated to field labels,
+  #                                'Asset created' / 'Asset updated' give an empty string
+  # Returns: HTML safe String, empty if there is nothing to show
+  def format_ci_history_details(entry)
+    data = entry.structured_details
+
+    if data.nil?
+      legacy = entry.b_details.to_s
+      return ''.html_safe if legacy.blank? || ['Asset created', 'Asset updated'].include?(legacy)
+
+      return h(legacy.split(',').map { |field| ci_history_field_label(field.strip) }.join(', '))
+    end
+
+    if data.key?('issue_id')
+      issue = Issue.visible.find_by(:id => data['issue_id'])
+      return issue ? link_to_issue(issue) : h("##{data['issue_id']}")
+    end
+
+    lines = Array(data['changes']).map { |change| format_ci_history_change(change) }
+    safe_join(lines, tag.br)
+  end
+
+  # Formats a single field change of a CI history entry.
+  # Parameter change: Hash { 'field' => column name, 'old' => String/nil, 'new' => String/nil }
+  #   * neither 'old' nor 'new' key present ...... "<label> updated" (value is not stored)
+  #   * only a new value ......................... "<label> set to <new>"
+  #   * only an old value ........................ "<label> deleted (<old>)"
+  #   * old and new value ........................ "<label> changed from <old> to <new>"
+  # Returns: HTML safe String, all values are escaped
+  def format_ci_history_change(change)
+    label = content_tag(:strong, ci_history_field_label(change['field'].to_s))
+    unless change.key?('old') || change.key?('new')
+      return l(:text_journal_changed_no_detail, :label => label).html_safe
+    end
+
+    old_value = content_tag(:i, change['old']) if change['old'].present?
+    new_value = content_tag(:i, change['new']) if change['new'].present?
+
+    text =
+      if old_value && new_value
+        l(:text_journal_changed, :label => label, :old => old_value, :new => new_value)
+      elsif new_value
+        l(:text_journal_set_to, :label => label, :value => new_value)
+      elsif old_value
+        l(:text_journal_deleted, :label => label, :old => old_value)
+      else
+        l(:text_journal_changed_no_detail, :label => label)
+      end
+    text.html_safe
+  end
+
+  # Returns the translated label of a hrzcm_ci column.
+  # Parameter field: String column name, e.g. 'j_location_id'
+  # Returns: String with the label from activerecord.attributes.hrzcm_ci, or the column name
+  #          itself if it is not a column of hrzcm_ci
+  def ci_history_field_label(field)
+    return field unless HrzcmCi.column_names.include?(field)
+
+    HrzcmCi.human_attribute_name(field)
   end
 end

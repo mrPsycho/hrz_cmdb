@@ -190,10 +190,13 @@ uk:
       action:
         created: "Створено"
         updated: "Оновлено"
+        issue_linked: "Пов'язано із задачею"
+        issue_unlinked: "Відв'язано від задачі"
       columns:
         date: "Дата"
         author: "Автор зміни"
         action: "Дія"
+        details: "Зміни"
 
     buttons:
       save: "Зберегти"

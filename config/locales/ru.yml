@@ -190,10 +190,13 @@ ru:
       action:
         created: "Создано"
         updated: "Обновлено"
+        issue_linked: "Привязано к задаче"
+        issue_unlinked: "Отвязано от задачи"
       columns:
         date: "Дата"
         author: "Автор изменения"
         action: "Действие"
+        details: "Изменения"
 
     buttons:
       save: "Сохранить"

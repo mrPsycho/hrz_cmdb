@@ -97,18 +97,19 @@ class HrzcmCi < ActiveRecord::Base
 
   # Creates a history entry after a new asset is saved.
   # Called automatically after_create.
-  # Side effects: inserts a CI change history row with the action name and current user.
+  # Side effects: inserts a CI change history row with the action name, the current user and
+  #               the initial values (location, assigned user, status, ...).
   def record_creation_history
-    HrzcmCiHistory.record(self, action: 'created', details: 'Asset created')
+    HrzcmCiHistory.record_changes(self, saved_changes, action: HrzcmCiHistory::ACTION_CREATED)
   end
 
   # Creates a history entry after an asset is updated.
   # Called automatically after_update.
-  # Side effects: inserts a CI change history row describing the updated fields.
+  # Side effects: inserts a CI change history row describing the updated fields with their
+  #               old and new values. Nothing is recorded if only bookkeeping columns changed.
   def record_update_history
     return if saved_changes.empty?
 
-    changed_fields = saved_changes.keys - %w[created_on updated_on created_by updated_by]
-    HrzcmCiHistory.record(self, action: 'updated', details: changed_fields.empty? ? 'Asset updated' : changed_fields.join(', '))
+    HrzcmCiHistory.record_changes(self, saved_changes, action: HrzcmCiHistory::ACTION_UPDATED)
   end
 end

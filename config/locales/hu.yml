@@ -190,10 +190,13 @@ hu:
       action:
         created: "Létrehozva"
         updated: "Frissítve"
+        issue_linked: "Feladathoz kapcsolva"
+        issue_unlinked: "Feladatról leválasztva"
       columns:
         date: "Dátum"
         author: "Módosító"
         action: "Művelet"
+        details: "Változások"
 
     buttons:
       save: "Mentés"

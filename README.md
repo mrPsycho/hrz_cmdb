@@ -13,6 +13,8 @@ A Configuration Management DataBase (CMDB) plugin for Redmine 6.1+ where you can
 - Documentation links 
 - Tiki (TikiWiki) integration
 - REST API (JSON and XML) for all CMDB data and for the CIs of a ticket
+- Change history per CI: who changed what and when, including hand-overs between users,
+  moves between locations and links to tickets
 
 ## Installation
 
@@ -142,6 +144,46 @@ In case you do not need all of the seed values and want to get rid of the unused
 You can repeat these Add/Remove Seed Data steps whenever you need, even after manual configuration.
 
 
+## Usage
+
+### Where is a device? Locations and holders
+
+A CI has a **location** and, optionally, an **assigned user** (the person who currently has it).
+
+- A device that is handed out (notebook, phone) gets the employee as *Assigned user*.
+- A device that is not handed out, or never is (server, switch, spare notebook), has no
+  assigned user; its *Location* tells where it is kept. Model the rooms where such devices
+  are stored as locations, e.g. an admin room "Admin" and a store room "Storage". If you
+  only have one such room, one location is enough.
+
+### Change history of a CI
+
+Open a CI to see its *Change history* next to the form. Every entry shows date, author,
+action and the changes, for example:
+
+| Action | Changes |
+|---|---|
+| Created | **Location** set to *RM: Storage* |
+| Updated | **Assigned user** set to *John Smith* |
+| Linked to issue | Task #123: Phone for new colleague |
+| Updated | **Assigned user** deleted (*John Smith*), **Location** changed from *RM: Storage* to *RM: Admin* |
+
+So the path of a device (handed out → returned to the admin → kept in storage → handed out
+to a new employee) can be followed. Old and new values are stored as names at the time of
+the change. The text of the comment field is not copied into the history, only the fact that
+it changed. Issues the viewer may not see are shown as a bare number without subject.
+
+### Connecting CIs to tickets
+
+1. Enable the "CMDB" module in the project (see above) and give the roles the permission
+   *Manage CIs in issues*.
+2. Open a ticket of that project. The section *Configuration Items* lists its CIs; click
+   *Add CI* to pick one from the CI class tree, or delete it from the list to unlink it.
+
+The ticket history logs every added or removed CI, and the CI's change history logs the
+ticket. This way a ticket shows which devices were needed to solve it, and a device shows
+the tickets it was part of.
+
 
 ## Languages
 
@@ -245,6 +287,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
+
+###### Version 0.9.3
+
+The change history of a CI now shows *what* changed: old and new values of every field
+(assigned user, location, lifecycle status, …), so the hand-over of a device from person to
+person and from room to room can be followed. Linking a CI to a ticket and unlinking it is
+recorded in the CI's history too. Entries written by earlier versions are still shown.
 
 ###### Version 0.8.0  31.07.2026
 

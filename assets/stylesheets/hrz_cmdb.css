@@ -209,6 +209,15 @@
   font-style: italic;
 }
 
+/* Column widths: date, author, action, the remaining space goes to the changes column */
+.ci-history-table th:nth-child(1) { width: 22%; }
+.ci-history-table th:nth-child(2) { width: 15%; }
+.ci-history-table th:nth-child(3) { width: 18%; }
+
+.ci-history-table td:nth-child(4) {
+  overflow-wrap: anywhere;
+}
+
 .form-group {
   margin-bottom: 10px;
   display: flex;
