@@ -113,6 +113,7 @@ hu:
       updated: "CI sikeresen frissítve"
       deleted: "CI sikeresen törölve"
       assigned_to_user: "Hozzárendelt konfigurációs elemek"
+      issued_assets_tab: "Kiadott eszközök"
 
     cis_by_class:
       title: "CI-k osztály szerint"

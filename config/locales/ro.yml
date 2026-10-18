@@ -113,6 +113,7 @@ ro:
       updated: "CI actualizat cu succes"
       deleted: "CI șters cu succes"
       assigned_to_user: "Elemente de configurare alocate"
+      issued_assets_tab: "Active predate"
 
     cis_by_class:
       title: "CI-uri pe clase"

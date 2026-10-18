@@ -15,6 +15,7 @@ A Configuration Management DataBase (CMDB) plugin for Redmine 6.1+ where you can
 - REST API (JSON and XML) for all CMDB data and for the CIs of a ticket
 - Change history per CI: who changed what and when, including hand-overs between users,
   moves between locations and links to tickets
+- Optional RedmineUP People integration: an *Issued assets* tab on the person page
 
 ## Installation
 
@@ -156,6 +157,12 @@ A CI has a **location** and, optionally, an **assigned user** (the person who cu
   are stored as locations, e.g. an admin room "Admin" and a store room "Storage". If you
   only have one such room, one location is enough.
 
+The CIs handed out to a user are listed on the user's Redmine profile page. If the
+RedmineUP People plugin (`redmine_people`) is installed, the person page also gets an
+**Issued assets** tab with a table of these CIs (name, class, producer, model, serial or
+IMEI, status, location); each name opens the CI in the CMDB. Both are shown only to users
+with the *View CMDB* permission.
+
 ### Change history of a CI
 
 Open a CI to see its *Change history* next to the form. Every entry shows date, author,
@@ -290,6 +297,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
+
+###### Version 0.9.7
+
+- New *Issued assets* tab on the person page of the RedmineUP People plugin, listing the
+  CIs currently handed out to the person as a table. The list on the Redmine user page
+  uses the same table and now also shows producer, model and the full location path.
 
 ###### Version 0.9.6
 

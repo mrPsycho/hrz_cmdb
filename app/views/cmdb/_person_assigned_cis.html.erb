@@ -1,0 +1,36 @@
+<!-- ------------------------------------------------------------------------------------------- -->
+<!--  Redmine CMDB plugin: Configuration Management DataBase                                     -->
+<!--  Copyright (C) 2025 Franz Apeltauer                                                         -->
+<!--                                                                                             -->
+<!--  This program is free software: you can redistribute it and/or modify it under the terms    -->
+<!--  of the GNU Affero General Public License as published by the Free Software Foundation,     -->
+<!--  either version 3 of the License, or (at your option) any later version.                    -->
+<!--                                                                                             -->
+<!--  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  -->
+<!--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  -->
+<!--  See the GNU Affero General Public License for more details.                                -->
+<!--                                                                                             -->
+<!--  You should have received a copy of the GNU Affero General Public License                   -->
+<!--  along with this program.  If not, see <https://www.gnu.org/licenses/>.                     -->
+<!-- -------------------------------------------------------------------------------------eohdr- -->
+<%# Purpose: Content of the "Issued assets" tab on the RedmineUP People person page.
+            Lists the CIs currently handed out to the person (j_assigned_user_id) as a table.
+            The tab itself is added by HrzCmdb::Patches::PeopleHelperPatch. People loads tab
+            contents through PeopleController#load_tab, which renders any partial named in the
+            request, so the view_cmdb check is repeated here and nothing is shown without it.
+            Locals: person (optional, Person/User); falls back to @person of PeopleController. %>
+
+<% person = local_assigns[:person] || @person %>
+<% if person.present? && HrzCmdb::PermissionHelper.user_has_permission?(User.current, 'view_cmdb') %>
+  <% assigned_cis = HrzcmCi.for_assigned_user(person.id)
+                           .includes(:ci_class, :location, :lifecycle_status)
+                           .ordered_by_abbr
+                           .to_a %>
+  <div id="cmdb-person-assigned-cis" class="cmdb-assigned-cis">
+    <% if assigned_cis.any? %>
+      <%= render partial: 'cmdb/assigned_cis_table', locals: { cis: assigned_cis } %>
+    <% else %>
+      <p class="nodata"><%= l(:label_no_data) %></p>
+    <% end %>
+  </div>
+<% end %>

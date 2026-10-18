@@ -113,6 +113,7 @@ hr:
       updated: "CI uspješno ažuriran"
       deleted: "CI uspješno obrisan"
       assigned_to_user: "Dodijeljeni konfiguracijski elementi"
+      issued_assets_tab: "Izdana imovina"
 
     cis_by_class:
       title: "CI prema klasama"

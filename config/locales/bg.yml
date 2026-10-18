@@ -113,6 +113,7 @@ bg:
       updated: "CI е актуализиран успешно"
       deleted: "CI е изтрит успешно"
       assigned_to_user: "Възложени конфигурационни елементи"
+      issued_assets_tab: "Издадени активи"
 
     cis_by_class:
       title: "CI по класове"

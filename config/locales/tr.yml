@@ -113,6 +113,7 @@ tr:
       updated: "CI başarıyla güncellendi"
       deleted: "CI başarıyla silindi"
       assigned_to_user: "Atanan yapılandırma öğeleri"
+      issued_assets_tab: "Zimmetli varlıklar"
 
     cis_by_class:
       title: "Sınıfa göre CI'lar"

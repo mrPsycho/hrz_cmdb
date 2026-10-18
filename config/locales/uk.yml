@@ -113,6 +113,7 @@ uk:
       updated: "CI успішно оновлено"
       deleted: "CI успішно видалено"
       assigned_to_user: "Призначені конфігураційні елементи"
+      issued_assets_tab: "Видані активи"
 
     cis_by_class:
       title: "CI за класами"

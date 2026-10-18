@@ -104,6 +104,7 @@ pl:
       updated: "CI zaktualizowany pomyślnie"
       deleted: "CI usunięty pomyślnie"
       assigned_to_user: "Przypisane elementy konfiguracji"
+      issued_assets_tab: "Wydane zasoby"
 
     cis_by_class:
       title: "CI według klas"

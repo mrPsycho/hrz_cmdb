@@ -113,6 +113,7 @@ el:
       updated: "Το CI ενημερώθηκε επιτυχώς"
       deleted: "Το CI διαγράφηκε επιτυχώς"
       assigned_to_user: "Ανατεθειμένα στοιχεία διαμόρφωσης"
+      issued_assets_tab: "Παραχωρημένος εξοπλισμός"
 
     cis_by_class:
       title: "CI ανά κλάση"

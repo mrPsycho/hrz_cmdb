@@ -104,6 +104,7 @@ en:
       updated: "CI updated successfully"
       deleted: "CI deleted successfully"
       assigned_to_user: "Assigned configuration items"
+      issued_assets_tab: "Issued assets"
 
     cis_by_class:
       title: "CIs by Class"

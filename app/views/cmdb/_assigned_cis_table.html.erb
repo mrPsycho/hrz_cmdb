@@ -1,0 +1,48 @@
+<!-- ------------------------------------------------------------------------------------------- -->
+<!--  Redmine CMDB plugin: Configuration Management DataBase                                     -->
+<!--  Copyright (C) 2025 Franz Apeltauer                                                         -->
+<!--                                                                                             -->
+<!--  This program is free software: you can redistribute it and/or modify it under the terms    -->
+<!--  of the GNU Affero General Public License as published by the Free Software Foundation,     -->
+<!--  either version 3 of the License, or (at your option) any later version.                    -->
+<!--                                                                                             -->
+<!--  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  -->
+<!--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  -->
+<!--  See the GNU Affero General Public License for more details.                                -->
+<!--                                                                                             -->
+<!--  You should have received a copy of the GNU Affero General Public License                   -->
+<!--  along with this program.  If not, see <https://www.gnu.org/licenses/>.                     -->
+<!-- -------------------------------------------------------------------------------------eohdr- -->
+<%# Purpose: Shared table of the CIs (assets) handed out to a user.
+            Used by the Redmine user page (_user_assigned_cis) and by the "Issued assets" tab of
+            the RedmineUP People person page (_person_assigned_cis). Each row links back into the
+            CMDB tree view with the CI details already opened.
+            Locals: cis (Enumerable of HrzcmCi; preload ci_class, location and lifecycle_status). %>
+
+<table class="list cmdb-assigned-cis-table">
+  <thead>
+    <tr>
+      <th><%= l('hrz_cmdb.fields.b_name_abbr') %></th>
+      <th><%= l('hrz_cmdb.fields.j_ci_class') %></th>
+      <th><%= l('hrz_cmdb.fields.b_producer') %></th>
+      <th><%= l('hrz_cmdb.fields.b_model') %></th>
+      <th><%= l('hrz_cmdb.fields.b_tag_serial') %></th>
+      <th><%= l('hrz_cmdb.fields.j_status') %></th>
+      <th><%= l('hrz_cmdb.fields.j_location') %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% cis.each do |ci| %>
+      <tr class="ci-row" data-ci-id="<%= ci.id %>">
+        <td class="ci-name"><%= link_to ci.display_name, cmdb_index_path(ci_id: ci.id) %></td>
+        <td class="ci-class"><%= ci.ci_class&.b_name_abbr %></td>
+        <td class="ci-producer"><%= ci.b_producer %></td>
+        <td class="ci-model"><%= ci.b_model %></td>
+        <td class="ci-serial"><%= ci.b_tag_serial %></td>
+        <td class="ci-status"><%= ci.lifecycle_status&.b_name_abbr %></td>
+        <%# Full location path from the root down to the CI location, e.g. "MB › 1F › 101". %>
+        <td class="ci-location"><%= ci.location&.path_name %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

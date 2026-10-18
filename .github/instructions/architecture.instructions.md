@@ -125,6 +125,14 @@ Details and rules: [redmine-rest-api.instructions.md](.github/instructions/redmi
   extends `IssuesHelper`;
   [lib/hrz_cmdb/hooks/view_issues_hook.rb](lib/hrz_cmdb/hooks/view_issues_hook.rb) injects
   the CI section into issue show/edit views. Extend the patches, never edit Redmine core.
+- **Users** — [lib/hrz_cmdb/hooks/view_users_hook.rb](lib/hrz_cmdb/hooks/view_users_hook.rb)
+  lists the CIs assigned to a user on the Redmine user page.
+- **RedmineUP People** (optional) —
+  [lib/hrz_cmdb/patches/people_helper_patch.rb](lib/hrz_cmdb/patches/people_helper_patch.rb)
+  prepends to `PeopleHelper#people_tabs` from the `after_plugins_loaded` hook (hrz_cmdb is
+  loaded before redmine_people) and adds the *Issued assets* tab. Both views render the
+  shared `cmdb/_assigned_cis_table` partial. People loads tabs through `load_tab`, which
+  renders any requested partial, so the tab partial checks `view_cmdb` itself.
 - **TikiWiki** — optional, base URL from the `tiki_base_url` plugin setting.
 
 ## Audit columns

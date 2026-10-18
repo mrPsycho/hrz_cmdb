@@ -113,6 +113,7 @@ ru:
       updated: "CI успешно обновлен"
       deleted: "CI успешно удален"
       assigned_to_user: "Назначенные конфигурационные элементы"
+      issued_assets_tab: "Выданные ассеты"
 
     cis_by_class:
       title: "CI по классам"
