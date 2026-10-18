@@ -264,6 +264,11 @@ pl:
   notice_ci_added: "CI dodany pomyślnie"
   notice_ci_removed: "CI usunięty pomyślnie"
   error_ci_not_found: "Nie znaleziono CI"
+  error_ci_load_failed: "Nie udało się wczytać CI"
+  error_ci_add_failed: "Nie udało się dodać CI"
+  error_ci_add_request_failed: "Wystąpił błąd podczas dodawania CI"
+  error_ci_remove_failed: "Nie udało się usunąć CI"
+  error_ci_remove_request_failed: "Wystąpił błąd podczas usuwania CI"
   label_ci_added: "dodano: %{new_value}"
   label_ci_deleted: "usunięto: %{old_value}"
 

@@ -291,6 +291,11 @@ el:
   notice_ci_added: "Το CI προστέθηκε επιτυχώς"
   notice_ci_removed: "Το CI αφαιρέθηκε επιτυχώς"
   error_ci_not_found: "Το CI δεν βρέθηκε"
+  error_ci_load_failed: "Αποτυχία φόρτωσης των CI"
+  error_ci_add_failed: "Αποτυχία προσθήκης του CI"
+  error_ci_add_request_failed: "Παρουσιάστηκε σφάλμα κατά την προσθήκη του CI"
+  error_ci_remove_failed: "Αποτυχία αφαίρεσης του CI"
+  error_ci_remove_request_failed: "Παρουσιάστηκε σφάλμα κατά την αφαίρεση του CI"
   label_ci_added: "προστέθηκε: %{new_value}"
   label_ci_deleted: "αφαιρέθηκε: %{old_value}"
 

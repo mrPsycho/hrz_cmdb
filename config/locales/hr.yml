@@ -291,6 +291,11 @@ hr:
   notice_ci_added: "CI uspješno dodan"
   notice_ci_removed: "CI uspješno uklonjen"
   error_ci_not_found: "CI nije pronađen"
+  error_ci_load_failed: "Učitavanje CI-jeva nije uspjelo"
+  error_ci_add_failed: "Dodavanje CI-ja nije uspjelo"
+  error_ci_add_request_failed: "Došlo je do pogreške pri dodavanju CI-ja"
+  error_ci_remove_failed: "Uklanjanje CI-ja nije uspjelo"
+  error_ci_remove_request_failed: "Došlo je do pogreške pri uklanjanju CI-ja"
   label_ci_added: "dodano: %{new_value}"
   label_ci_deleted: "uklonjeno: %{old_value}"
 

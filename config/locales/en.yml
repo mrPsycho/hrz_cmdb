@@ -282,6 +282,11 @@ en:
   notice_ci_added: "CI added successfully"
   notice_ci_removed: "CI removed successfully"
   error_ci_not_found: "CI not found"
+  error_ci_load_failed: "Failed to load CIs"
+  error_ci_add_failed: "Failed to add CI"
+  error_ci_add_request_failed: "An error occurred while adding the CI"
+  error_ci_remove_failed: "Failed to remove CI"
+  error_ci_remove_request_failed: "An error occurred while removing the CI"
   label_ci_added: "added: %{new_value}"
   label_ci_deleted: "deleted: %{old_value}"
 

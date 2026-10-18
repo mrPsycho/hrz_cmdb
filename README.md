@@ -288,6 +288,19 @@ The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
 
+###### Version 0.9.4
+
+Fixes for the *Configuration Items* section of a ticket:
+
+- A CI added to a ticket is shown as a proper table row again; before, all its columns were
+  squashed into the *Name* column until the page was reloaded.
+- Adding or removing a CI no longer writes the comment "CI added successfully" into the
+  ticket; the ticket history still records which CI was added or removed.
+- The CI name opens the CI in the CMDB page (for users allowed to view the CMDB) instead of a
+  bare, unformatted fragment.
+- The location is shown with its full path (e.g. *Office › 2nd floor › Admin*) and a new
+  column shows the user the CI is assigned to. Column headers and messages are translated.
+
 ###### Version 0.9.3
 
 The change history of a CI now shows *what* changed: old and new values of every field

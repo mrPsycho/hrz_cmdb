@@ -18,10 +18,22 @@
 
 var IssueCis = {
   issueId: null,
+  // Translated messages, read from the data-ci-messages attribute of #issue-cis-section
+  // (rendered server-side by _issue_cis_section.html.erb).
+  messages: {},
 
   init: function(issueId) {
     this.issueId = issueId;
+    this.messages = $('#issue-cis-section').data('ci-messages') || {};
     this.bindEvents();
+  },
+
+  // Returns the translated message for a key of the data-ci-messages attribute.
+  // Parameter key: 'load_failed', 'add_failed', 'add_request_failed', 'remove_failed' or
+  //                'remove_request_failed'
+  // Returns: String message, or the key itself when the server did not provide the message
+  msg: function(key) {
+    return this.messages[key] || key;
   },
 
   bindEvents: function() {
@@ -39,12 +51,12 @@ var IssueCis = {
           self.showNotice(data.notice);
         }
       } else {
-        self.showErrors(data.errors || ['An error occurred']);
+        self.showErrors(data.errors || [self.msg('remove_failed')]);
       }
     });
 
     $(document).on('ajax:error', 'a.icon-del[data-remote="true"]', function() {
-      self.showErrors(['An error occurred while removing the CI']);
+      self.showErrors([self.msg('remove_request_failed')]);
     });
 
     // Handle tree node clicks in modal
@@ -116,7 +128,7 @@ var IssueCis = {
       },
       error: function() {
         $('#ci-selection-loading').hide();
-        self.showErrors(['Failed to load CIs']);
+        self.showErrors([self.msg('load_failed')]);
       }
     });
   },
@@ -132,7 +144,7 @@ var IssueCis = {
         self.renderNodes(nodes, container);
       },
       error: function() {
-        self.showErrors(['Failed to load CIs']);
+        self.showErrors([self.msg('load_failed')]);
       }
     });
   },
@@ -215,55 +227,51 @@ var IssueCis = {
           self.closeModal();
 
           // Handle both string responses and Document objects
-          var htmlContent = response.html;
-          if (response.html instanceof Document) {
-            console.log('Response is Document object, extracting body content');
-            htmlContent = response.html.body ? response.html.body.innerHTML : '';
-          } else if (typeof response.html === 'string') {
-            console.log('Response is string, using directly');
-          }
+          // (Corrected: the request uses dataType 'json', so response.html is always the
+          // rendered row as a string; the former Document branch was dead code and was removed.)
+          var htmlContent = response.html || '';
 
           self.addCiRow(htmlContent);
           if (response.notice) {
             self.showNotice(response.notice);
           }
         } else {
-          self.showErrors(response.errors || ['Failed to add CI']);
+          self.showErrors(response.errors || [self.msg('add_failed')]);
         }
       },
       error: function() {
-        self.showErrors(['An error occurred while adding the CI']);
+        self.showErrors([self.msg('add_request_failed')]);
       }
     });
   },
 
+  // Appends a rendered CI row (_ci_row.html.erb) to the CI table of the issue.
+  // Parameter html: String HTML of one <tr class="ci-row">, possibly preceded by the AGPL header
+  //                 HTML comments of the partial
+  // Side effects: inserts the row into tbody#ci-rows and shows the table if it was hidden
   addCiRow: function(html) {
     // If table doesn't exist, create it
-    if ($('#issue-cis-list table').length === 0) {
-      var table = $('<table class="list issue-cis-table">' +
-        '<thead>' +
-        '<tr>' +
-        '<th>' + (window.ci_labels ? window.ci_labels.name : 'Name') + '</th>' +
-        '<th>' + (window.ci_labels ? window.ci_labels.ci_class : 'CI Class') + '</th>' +
-        '<th>' + (window.ci_labels ? window.ci_labels.location : 'Location') + '</th>' +
-        '<th>' + (window.ci_labels ? window.ci_labels.status : 'Status') + '</th>' +
-        '<th style="width: 15%;"></th>' +
-        '</tr>' +
-        '</thead>' +
-        '<tbody id="ci-rows"></tbody>' +
-        '</table>');
-      $('#issue-cis-list').html(table);
+    // (Corrected: the table skeleton with the translated headers is always rendered server-side
+    // by _issue_cis_section.html.erb and only hidden while empty, so it just has to be shown.)
+    var tbody = document.getElementById('ci-rows');
+    if (!tbody) {
+      return;
     }
+    $('#issue-cis-list table').show();
 
     // Add the new row
-    console.log('Adding CI row HTML:', html);
-    $('#ci-rows').append(html);
+    // jQuery's append() picks its parsing wrapper from the first "<tag" in the string, which is
+    // the "<https:" of the license header comment, so it would not parse the markup as table
+    // content and the browser would drop the <tr>/<td> tags (ticket #148540). insertAdjacentHTML
+    // parses in the context of the tbody, so the row stays intact and comments are harmless.
+    tbody.insertAdjacentHTML('beforeend', html);
   },
 
   updateCiList: function() {
     // If no CIs left, just remove the table (Redmine standard - no message shown)
+    // (Corrected: the table is hidden instead of removed, so a CI added later can reuse it.)
     if ($('#ci-rows tr').length === 0) {
-      $('#issue-cis-list table').remove();
+      $('#issue-cis-list table').hide();
     }
   },
 

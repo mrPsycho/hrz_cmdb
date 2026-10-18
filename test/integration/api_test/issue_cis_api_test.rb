@@ -121,4 +121,28 @@ class Redmine::ApiTest::IssueCisApiTest < Redmine::ApiTest::Base
     entry = HrzcmCiHistory.where(:j_ci_id => 2).ordered_by_date.first
     assert_equal HrzcmCiHistory::ACTION_ISSUE_UNLINKED, entry.b_action
   end
+
+  # Linking and unlinking must write an issue journal without notes (no frozen flash text as
+  # a comment), carrying only the 'relation'/'ci' JournalDetail.
+  test "should journal linking and unlinking without notes" do
+    assert_difference ['Journal.count', 'JournalDetail.count'], 1 do
+      post '/issues/1/cis.json', :params => { :ci_id => 2 }, :headers => @jsmith
+    end
+    assert_response :created
+    journal = Journal.where(:journalized_type => 'Issue', :journalized_id => 1).order(:id).last
+    assert journal.notes.blank?, "journal notes must be blank, got #{journal.notes.inspect}"
+    detail = journal.details.first
+    assert_equal ['relation', 'ci', '2', nil],
+                 [detail.property, detail.prop_key, detail.value.to_s, detail.old_value]
+
+    assert_difference ['Journal.count', 'JournalDetail.count'], 1 do
+      delete '/issues/1/cis/2.json', :headers => @jsmith
+    end
+    assert_response :no_content
+    journal = Journal.where(:journalized_type => 'Issue', :journalized_id => 1).order(:id).last
+    assert journal.notes.blank?, "journal notes must be blank, got #{journal.notes.inspect}"
+    detail = journal.details.first
+    assert_equal ['relation', 'ci', nil, '2'],
+                 [detail.property, detail.prop_key, detail.value, detail.old_value.to_s]
+  end
 end

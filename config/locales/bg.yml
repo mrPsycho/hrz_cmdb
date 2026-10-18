@@ -291,6 +291,11 @@ bg:
   notice_ci_added: "CI е добавен успешно"
   notice_ci_removed: "CI е премахнат успешно"
   error_ci_not_found: "CI не е намерен"
+  error_ci_load_failed: "Неуспешно зареждане на CI"
+  error_ci_add_failed: "Неуспешно добавяне на CI"
+  error_ci_add_request_failed: "Възникна грешка при добавянето на CI"
+  error_ci_remove_failed: "Неуспешно премахване на CI"
+  error_ci_remove_request_failed: "Възникна грешка при премахването на CI"
   label_ci_added: "добавен: %{new_value}"
   label_ci_deleted: "премахнат: %{old_value}"
 

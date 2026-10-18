@@ -19,6 +19,11 @@
 class HrzcmLocation < ActiveRecord::Base
   self.table_name = 'hrzcm_location'
 
+  # Separator between the elements of a location path (see path_name).
+  PATH_SEPARATOR = ' › '.freeze
+  # Maximum number of locations walked when building a location path (see path_locations).
+  PATH_MAX_DEPTH = 20
+
   # Associations
   belongs_to :location_type, class_name: 'HrzcmLocatHier', foreign_key: 'j_type_id'
   belongs_to :parent1, class_name: 'HrzcmLocation', foreign_key: 'j_part_of1_id', optional: true
@@ -82,6 +87,40 @@ class HrzcmLocation < ActiveRecord::Base
   # Returns: String in format "TYPE: name"
   def tree_label
     "#{location_type.b_name_abbr}: #{b_name_abbr || b_name_full}"
+  end
+
+  # Returns the locations from the root down to this location along the primary parent chain.
+  # The primary parent is parent1; parent2 is only followed when parent1 is not set.
+  # A location that was already visited ends the walk (cycle guard), and the walk stops after
+  # PATH_MAX_DEPTH locations, so corrupt data can never cause an endless loop.
+  # Returns: Array of HrzcmLocation instances, root first and self last (never empty)
+  # Side effects: loads the parent records (one query per not yet loaded parent)
+  def path_locations
+    chain = []
+    visited = {}
+    node = self
+
+    while node && chain.size < PATH_MAX_DEPTH
+      key = node.id || node.object_id
+      break if visited[key]
+
+      visited[key] = true
+      chain.unshift(node)
+      node = node.parent1 || node.parent2
+    end
+
+    chain
+  end
+
+  # Returns the full path of the location as text, e.g. "MB › 1F › 101".
+  # Every path element is shown with to_s (abbreviation, full name or text key).
+  # Parameter separator: String placed between the path elements
+  #   * ' › ' (default) ..... used by the CI table on issue pages
+  #   * any other String .... e.g. ' / ' for plain-text output
+  # Returns: String with the location names from the root down to this location
+  # Side effects: see path_locations
+  def path_name(separator = PATH_SEPARATOR)
+    path_locations.map(&:to_s).join(separator)
   end
 
   private

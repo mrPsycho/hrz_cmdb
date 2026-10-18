@@ -282,6 +282,11 @@ de:
   notice_ci_added: "CI erfolgreich hinzugefügt"
   notice_ci_removed: "CI erfolgreich entfernt"
   error_ci_not_found: "CI nicht gefunden"
+  error_ci_load_failed: "CIs konnten nicht geladen werden"
+  error_ci_add_failed: "CI konnte nicht hinzugefügt werden"
+  error_ci_add_request_failed: "Beim Hinzufügen des CI ist ein Fehler aufgetreten"
+  error_ci_remove_failed: "CI konnte nicht entfernt werden"
+  error_ci_remove_request_failed: "Beim Entfernen des CI ist ein Fehler aufgetreten"
   label_ci_added: "hinzugefügt: %{new_value}"
   label_ci_deleted: "entfernt: %{old_value}"
 

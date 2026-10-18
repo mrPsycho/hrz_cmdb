@@ -44,14 +44,22 @@ class IssueCisController < ApplicationController
   # Parameter ci_id (via params): Integer ID of the CI to link to the issue
   # Parameter issue_id (via params): Integer ID of the issue (set by find_issue)
   # Returns: 201 with show.api.rsb for .json/.xml requests, 422 with the validation errors on
-  #          failure, 404 if the CI does not exist, otherwise the UI JSON envelope with the CI row HTML
+  #          failure, 404 if the CI does not exist, otherwise the UI JSON envelope
+  #          { success: true, html: <CI row HTML>, notice: <flash text> }
+  #          or { success: false, errors: [...] }
+  # Side effects: inserts a row into hrzcm_ci_issues (and, through its callback, hrzcm_ci_history)
+  #          and adds a journal to the issue that carries no notes, only a JournalDetail
+  #          (property 'relation', prop_key 'ci', value = CI id). The detail is rendered in the
+  #          viewer's language by IssuesHelperPatch; the flash notice is not stored as a comment.
   def create
     @ci = HrzcmCi.find(params[:ci_id])
     @ci_issue = HrzcmCiIssue.new(ci_id: @ci.id, issue_id: @issue.id)
 
     if @ci_issue.save
-      # Log the CI addition in the issue's history
-      journal = @issue.init_journal(User.current, l(:notice_ci_added))
+      # Log the CI addition in the issue's history.
+      # The journal deliberately has no notes: the JournalDetail below is the history entry.
+      # Journal#save skips only journals whose notes AND details are empty, so it is still saved.
+      journal = @issue.init_journal(User.current)
       journal.details << JournalDetail.new(
         property: 'relation',
         prop_key: 'ci',
@@ -86,14 +94,19 @@ class IssueCisController < ApplicationController
   # Parameter id (via params): Integer ID of the CI to unlink from the issue
   # Parameter issue_id (via params): Integer ID of the issue (set by find_issue)
   # Returns: 204 for .json/.xml requests, 404 if the association does not exist,
-  #          otherwise the UI JSON envelope
+  #          otherwise the UI JSON envelope { success: true, notice: <flash text> }
+  #          or { success: false, errors: [...] }
+  # Side effects: deletes the row from hrzcm_ci_issues (and, through its callback, writes
+  #          hrzcm_ci_history) and adds a journal to the issue that carries no notes, only a
+  #          JournalDetail (property 'relation', prop_key 'ci', old_value = CI id).
   def destroy
     @ci_issue = HrzcmCiIssue.find_by(ci_id: params[:id], issue_id: @issue.id)
     @ci = HrzcmCi.find_by(id: params[:id])
 
     if @ci_issue && @ci_issue.destroy
-      # Log the CI removal in the issue's history
-      journal = @issue.init_journal(User.current, l(:notice_ci_removed))
+      # Log the CI removal in the issue's history.
+      # No notes: the JournalDetail below is the history entry (see create).
+      journal = @issue.init_journal(User.current)
       journal.details << JournalDetail.new(
         property: 'relation',
         prop_key: 'ci',

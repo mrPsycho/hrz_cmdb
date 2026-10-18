@@ -14,20 +14,33 @@
 <!--  along with this program.  If not, see <https://www.gnu.org/licenses/>.                     -->
 <!-- -------------------------------------------------------------------------------------eohdr- -->
 <%# Purpose: Table row partial displaying a single CI entry in an issue.
-            Shows CI details with link to CMDB and remove button for unlinking. %>
+            Shows CI details with link to CMDB and remove button for unlinking.
+            Rendered by the issue CI section and returned as HTML by IssueCisController#create;
+            the columns must match the thead in _issue_cis_section.html.erb.
+            Locals: ci (HrzcmCi), issue (Issue; the delete button needs issue.editable?). %>
 
 <tr class="ci-row" data-ci-id="<%= ci.id %>">
   <td class="ci-name">
-    <%= link_to ci.display_name, { controller: 'cmdb', action: 'show_ci', id: ci.id }, target: '_blank', class: 'ci-link' %>
+    <%# The link opens the full CMDB page with the CI preselected (deep link /cmdb?ci_id=<id>).
+        Users without view_cmdb would only get a 403 there, so they see the name as plain text. %>
+    <% if HrzCmdb::PermissionHelper.user_has_permission?(User.current, 'view_cmdb') %>
+      <%= link_to ci.display_name, { controller: 'cmdb', action: 'index', ci_id: ci.id }, target: '_blank', class: 'ci-link' %>
+    <% else %>
+      <%= ci.display_name %>
+    <% end %>
   </td>
   <td class="ci-class">
     <%= ci.ci_class ? ci.ci_class.b_name_abbr : '-' %>
   </td>
   <td class="ci-location">
-    <%= ci.location ? ci.location.b_name_abbr : '-' %>
+    <%# Full location path from the root down to the CI location, e.g. "MB › 1F › 101". %>
+    <%= ci.location ? ci.location.path_name : '-' %>
   </td>
   <td class="ci-status">
     <%= ci.lifecycle_status ? ci.lifecycle_status.b_name_abbr : '-' %>
+  </td>
+  <td class="ci-holder">
+    <%= ci.assigned_user ? link_to_user(ci.assigned_user) : '-' %>
   </td>
   <% if issue.editable? %>
     <td class="buttons">

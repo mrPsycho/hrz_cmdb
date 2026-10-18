@@ -134,6 +134,59 @@ class HrzcmLocationTest < ActiveSupport::TestCase
     assert_equal 'BLD: MB', location.tree_label
   end
 
+  # Test location path (ticket #148540: the issue CI table shows the full location path)
+  test "path_name should return only the own name for a root location" do
+    building = HrzcmLocation.find(1)
+    assert_equal [building], building.path_locations
+    assert_equal 'MB', building.path_name
+  end
+
+  test "path_name should walk a chain of three levels from the root down" do
+    room = HrzcmLocation.find(3)
+    assert_equal [1, 2, 3], room.path_locations.map(&:id)
+    assert_equal 'MB › 1F › 101', room.path_name
+  end
+
+  test "path_name should use the given separator" do
+    assert_equal 'MB / 1F / 101', HrzcmLocation.find(3).path_name(' / ')
+  end
+
+  test "path_name should fall back to parent2 when parent1 is not set" do
+    location = HrzcmLocation.create!(b_name_abbr: 'P2', j_type_id: 3, j_part_of2_id: 2)
+    assert_equal 'MB › 1F › P2', location.path_name
+  end
+
+  test "path_name should prefer parent1 over parent2" do
+    location = HrzcmLocation.create!(b_name_abbr: 'BOTH', j_type_id: 3, j_part_of1_id: 1, j_part_of2_id: 2)
+    assert_equal 'MB › BOTH', location.path_name
+  end
+
+  test "path_name should stop at a cycle in the parent chain" do
+    # MB -> 1F -> 101 -> MB
+    HrzcmLocation.find(1).update_columns(j_part_of1_id: 3)
+
+    room = HrzcmLocation.find(3)
+    assert_equal [1, 2, 3], room.path_locations.map(&:id)
+    assert_equal 'MB › 1F › 101', room.path_name
+  end
+
+  test "path_name should stop a self reference" do
+    building = HrzcmLocation.find(1)
+    building.update_columns(j_part_of1_id: 1)
+    assert_equal 'MB', HrzcmLocation.find(1).path_name
+  end
+
+  test "path_locations should be limited to PATH_MAX_DEPTH levels" do
+    parent = HrzcmLocation.find(1)
+    (HrzcmLocation::PATH_MAX_DEPTH + 5).times do |i|
+      parent = HrzcmLocation.create!(b_name_abbr: "L#{i}", j_type_id: 3, j_part_of1_id: parent.id)
+    end
+
+    path = parent.path_locations
+    assert_equal HrzcmLocation::PATH_MAX_DEPTH, path.size
+    assert_equal parent, path.last
+  end
+
   # Test callbacks
   test "should normalize b_key to nil if blank" do
     location = HrzcmLocation.create!(

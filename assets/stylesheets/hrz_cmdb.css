@@ -566,7 +566,7 @@ input[type="submit"] {
   text-align: left;
 }
 
-.ci-class, .ci-location, .ci-status {
+.ci-class, .ci-location, .ci-status, .ci-holder {
   text-align: left;
 }
 
