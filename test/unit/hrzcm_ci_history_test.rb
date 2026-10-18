@@ -189,4 +189,90 @@ class HrzcmCiHistoryTest < ActiveSupport::TestCase
     assert_equal 0, HrzcmCiHistory.where(j_ci_id: ci.id).count
     assert_equal 0, HrzcmCiIssue.where(ci_id: ci.id).count
   end
+
+  # Inserts a history entry as written by an older plugin version, without touching the CI.
+  # Parameter ci: HrzcmCi instance
+  # Parameter details: String stored in b_details as it is
+  # Parameter age: ActiveSupport::Duration, how long ago the entry was written
+  # Returns: HrzcmCiHistory instance that was created
+  def old_entry(ci, details, age)
+    HrzcmCiHistory.create!(j_ci_id: ci.id, b_action: 'updated', b_details: details,
+                           created_by: 1, created_on: age.ago)
+  end
+
+  # Runs HrzcmCiHistory.inferred_values over the whole history of a CI.
+  # Parameter ci: HrzcmCi instance
+  # Returns: Hash from HrzcmCiHistory.inferred_values
+  def inferred_for(ci)
+    HrzcmCiHistory.inferred_values(ci.reload, ci.history_entries.ordered_by_date.to_a)
+  end
+
+  test "inferred_values should reconstruct the new values of a legacy entry from the current values" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 2)
+    legacy = old_entry(ci, 'j_assigned_user_id, b_comment', 1.hour)
+
+    inferred = inferred_for(ci)
+    assert_equal({ 'new' => User.find(2).name, 'new_id' => 2 }, inferred[legacy.id]['j_assigned_user_id'])
+    assert_not inferred[legacy.id].key?('b_comment'), 'comment values are never shown'
+    assert_equal({ 'new' => HrzcmLocation.find(3).display_name }, inferred[1]['j_location_id'],
+                 'the older fixture entry gets the current location')
+  end
+
+  test "inferred_values should use the old value of a newer change for an older legacy entry" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 2)
+    legacy = old_entry(ci, 'j_assigned_user_id', 2.hours)
+    ci.update!(j_assigned_user_id: 3)
+
+    assert_equal({ 'new' => User.find(2).name, 'new_id' => 2 }, inferred_for(ci)[legacy.id]['j_assigned_user_id'])
+  end
+
+  test "inferred_values should not guess the value before a legacy change" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 3)
+    older = old_entry(ci, 'j_assigned_user_id', 3.hours)
+    newer = old_entry(ci, 'j_assigned_user_id', 1.hour)
+
+    inferred = inferred_for(ci)
+    assert_equal 3, inferred[newer.id]['j_assigned_user_id']['new_id']
+    assert_nil inferred[older.id]
+  end
+
+  test "inferred_values should add the user id to entries without one if the name matches" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 3)
+    without_id = old_entry(ci, { 'changes' => [{ 'field' => 'j_assigned_user_id', 'old' => User.find(2).name,
+                                                 'new' => User.find(3).name }] }.to_json, 1.hour)
+    legacy = old_entry(ci, 'j_assigned_user_id', 2.hours)
+
+    inferred = inferred_for(ci)
+    assert_equal({ 'j_assigned_user_id' => { 'new_id' => 3 } }, inferred[without_id.id])
+    assert_equal({ 'new' => User.find(2).name }, inferred[legacy.id]['j_assigned_user_id'],
+                 'the old value of an entry without ids has no id either')
+  end
+
+  test "inferred_values should not add a user id if the stored name differs" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 3)
+    entry = old_entry(ci, { 'changes' => [{ 'field' => 'j_assigned_user_id', 'old' => nil,
+                                            'new' => 'Somebody else' }] }.to_json, 1.hour)
+
+    assert_nil inferred_for(ci)[entry.id]
+  end
+
+  test "inferred_values should stop at the creation of the ci" do
+    ci = HrzcmCi.create!(b_name_abbr: 'NB03', j_ci_class_id: 2, j_location_id: 3, j_assigned_user_id: 2)
+    before_creation = old_entry(ci, 'j_assigned_user_id', 1.day)
+
+    assert_nil inferred_for(ci)[before_creation.id]
+  end
+
+  test "legacy_fields should list the columns of entries written before 0.9.3 only" do
+    assert_equal %w[b_name_full j_location_id], HrzcmCiHistory.find(1).legacy_fields
+    assert_equal [], HrzcmCiHistory.new(b_details: 'Asset created').legacy_fields
+    assert_equal [], HrzcmCiHistory.new(b_details: 'Asset updated').legacy_fields
+    assert_equal [], HrzcmCiHistory.new(b_details: nil).legacy_fields
+    assert_equal [], HrzcmCiHistory.new(b_details: { 'changes' => [] }.to_json).legacy_fields
+  end
 end

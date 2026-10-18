@@ -170,10 +170,11 @@ action and the changes, for example:
 
 So the path of a device (handed out → returned to the admin → kept in storage → handed out
 to a new employee) can be followed. Old and new values are stored as names at the time of
-the change. The author and the assigned users are links to the users' profiles (assigned
-users for entries written since 0.9.5). The text of the comment field is not copied into the
-history, only the fact that it changed. Issues the viewer may not see are shown as a bare
-number without subject.
+the change. The author and the assigned users are links to the users' profiles. For entries
+written by versions before 0.9.5, which did not store all values, the new value is
+reconstructed from the CI's current value and the newer entries. The text of the comment
+field is not copied into the history, only the fact that it changed. Issues the viewer may
+not see are shown as a bare number without subject.
 
 ### Connecting CIs to tickets
 
@@ -289,6 +290,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
+
+###### Version 0.9.6
+
+- The *Change history* shows the value an older entry set, e.g. *Assigned user set to
+  John Smith*, also for entries written before 0.9.3, which only named the changed field.
+  The value is reconstructed from the CI's current value and the newer entries; assigned
+  users link to their profiles. Values before the oldest reconstructable change stay unknown.
+- The history has three columns (date with the author below it, action, changes), so names
+  and words in the narrow sidebar are no longer broken in the middle.
 
 ###### Version 0.9.5
 

@@ -105,13 +105,48 @@ class CmdbHelperTest < Redmine::HelperTest
   end
 
   test "format_ci_history_details should translate legacy column lists" do
-    assert_equal 'Full name, Location', format_ci_history_details(HrzcmCiHistory.find(1))
+    assert_equal '<strong>Full name</strong> updated<br><strong>Location</strong> updated',
+                 format_ci_history_details(HrzcmCiHistory.find(1))
+  end
+
+  test "format_ci_history_details should show reconstructed values of legacy entries" do
+    html = format_ci_history_details(HrzcmCiHistory.find(1), 'j_location_id' => { 'new' => '<RM: 101>' })
+    assert_equal '<strong>Full name</strong> updated<br><strong>Location</strong> set to <i>&lt;RM: 101&gt;</i>', html
+  end
+
+  test "format_ci_history_details should link a reconstructed assigned user of a legacy entry" do
+    entry = history_entry('updated', 'j_assigned_user_id')
+    html = format_ci_history_details(entry, 'j_assigned_user_id' => { 'new' => 'John Smith', 'new_id' => 2 })
+
+    assert_includes html, '<strong>Assigned user</strong> set to <i><a '
+    assert_includes html, 'href="/users/2"'
+  end
+
+  test "format_ci_history_details should prefer stored values over reconstructed ones" do
+    entry = history_entry('updated', 'changes' => [
+      { 'field' => 'j_assigned_user_id', 'old' => 'Old', 'new' => 'Dave Lopper', 'new_id' => 3 }
+    ])
+    html = format_ci_history_details(entry, 'j_assigned_user_id' => { 'new_id' => 2 })
+
+    assert_includes html, 'href="/users/3"'
+    assert_not_includes html, 'href="/users/2"'
+  end
+
+  test "format_ci_history_details should add a reconstructed user id to a stored change" do
+    entry = history_entry('updated', 'changes' => [
+      { 'field' => 'j_assigned_user_id', 'old' => 'Old', 'new' => 'Dave Lopper' }
+    ])
+    html = format_ci_history_details(entry, 'j_assigned_user_id' => { 'new_id' => 3 })
+
+    assert_includes html, 'href="/users/3"'
+    assert_includes html, '<i>Old</i>'
   end
 
   test "format_ci_history_details should hide legacy default texts" do
     assert_equal '', format_ci_history_details(history_entry('created', 'Asset created'))
     assert_equal '', format_ci_history_details(history_entry('updated', 'Asset updated'))
     assert_equal '', format_ci_history_details(history_entry('updated', nil))
+    assert_equal '', format_ci_history_details(history_entry('updated', nil), nil)
   end
 
   test "ci_history_field_label should keep unknown column names" do

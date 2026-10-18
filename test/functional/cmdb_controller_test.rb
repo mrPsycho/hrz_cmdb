@@ -107,11 +107,27 @@ class CmdbControllerTest < ActionController::TestCase
     get :show_ci, params: { id: 1 }, format: :html
     assert_response :success
 
+    assert_select 'table.ci-history-table thead th', 3
     assert_select 'table.ci-history-table tbody tr:first-child' do
-      assert_select 'td:nth-child(2) a[href=?]', '/users/1', :text => @admin.name
-      assert_select 'td:nth-child(4) a[href=?]', '/users/3', :text => User.find(3).name
+      assert_select 'td:nth-child(1) .ci-history-author a[href=?]', '/users/1', :text => @admin.name
+      assert_select 'td:nth-child(3) a[href=?]', '/users/3', :text => User.find(3).name
     end
     assert_select 'table.ci-history-table td', :text => @admin.login, :count => 0
+  end
+
+  test "ci history should show the reconstructed assigned user of an entry written before 0.9.3" do
+    ci = HrzcmCi.find(1)
+    ci.update_columns(j_assigned_user_id: 2)
+    HrzcmCiHistory.create!(j_ci_id: ci.id, b_action: 'updated', b_details: 'j_assigned_user_id',
+                           created_by: 1, created_on: Time.current)
+
+    @request.session[:user_id] = @admin.id
+    get :show_ci, params: { id: 1 }, format: :html
+    assert_response :success
+
+    assert_select 'table.ci-history-table tbody tr:first-child td:nth-child(3)', :text => /Assigned user set to John Smith/ do
+      assert_select 'a[href=?]', '/users/2'
+    end
   end
 
   test "should create ci with edit permission" do

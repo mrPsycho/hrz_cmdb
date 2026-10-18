@@ -18,6 +18,8 @@
 #          Updates store the changed fields with their old and new values, and linking or
 #          unlinking an asset to/from an issue is recorded too, so the whole path of a
 #          device (holder -> admin room -> storage -> new holder) can be followed.
+#          Values that older entries did not store are reconstructed for display from the
+#          CI's current values (see inferred_values).
 
 require 'json'
 
@@ -134,6 +136,84 @@ class HrzcmCiHistory < ActiveRecord::Base
       else value.to_s
       end
     (label || "##{value}").to_s.truncate(MAX_VALUE_LENGTH)
+  end
+
+  # Reconstructs the values that history entries did not store, by walking the history from
+  # the newest entry back and starting from the CI's current values: the value after a change
+  # is the current value, or the old value stored by the next newer change of the same field.
+  #   * entries written before 0.9.3 only name the changed columns; for them the new value
+  #     is reconstructed (old values stay unknown)
+  #   * entries written by 0.9.3 / 0.9.4 store user names but no user IDs; for them the ID of
+  #     the new user is reconstructed if the stored name matches the reconstructed one
+  # The walk stops for a field at a change whose value is unknown, and for all fields at the
+  # creation of the CI. This relies on every column change being recorded, which the model
+  # callbacks of HrzcmCi have done since the history exists.
+  # Parameter ci: HrzcmCi instance the entries belong to, with its current values
+  # Parameter entries: Array or relation of HrzcmCiHistory of that CI, newest first and
+  #   without gaps (e.g. ci.history_entries.ordered_by_date.limit(20))
+  # Returns: Hash { entry id => { column name => { 'new' => String, 'new_id' => Integer } } },
+  #          'new' only for entries before 0.9.3, 'new_id' only for USER_FIELDS; entries
+  #          without reconstructed values are missing
+  def self.inferred_values(ci, entries)
+    # Value after the entry currently looked at; a missing key means "unknown", nil means blank.
+    known = (HrzcmCi.column_names - IGNORED_FIELDS - VALUELESS_FIELDS).index_with do |field|
+      current_value(ci, field)
+    end
+
+    entries.each_with_object({}) do |entry, result|
+      inferred = {}
+      data = entry.structured_details
+
+      if data.nil?
+        entry.legacy_fields.each do |field|
+          inferred[field] = known[field] if known[field]
+          known.delete(field)
+        end
+      else
+        Array(data['changes']).each do |change|
+          field = change['field']
+          next if VALUELESS_FIELDS.include?(field) || !(change.key?('old') || change.key?('new'))
+
+          after = known[field]
+          if USER_FIELDS.include?(field) && !change.key?('new_id') && change['new'].present? &&
+             after && after['new'] == change['new'] && after['new_id']
+            inferred[field] = { 'new_id' => after['new_id'] }
+          end
+          if change.key?('old')
+            known[field] = change['old'].present? ? { 'new' => change['old'], 'new_id' => change['old_id'] }.compact : nil
+          else
+            known.delete(field)
+          end
+        end
+      end
+
+      known.clear if entry.b_action == ACTION_CREATED
+      result[entry.id] = inferred if inferred.any?
+    end
+  end
+
+  # Returns the current value of a CI column in the form used by inferred_values.
+  # Parameter ci: HrzcmCi instance
+  # Parameter field: String column name of hrzcm_ci
+  # Returns: Hash { 'new' => display text, 'new_id' => Integer user ID (USER_FIELDS only) },
+  #          nil if the column is blank
+  def self.current_value(ci, field)
+    raw = ci[field]
+    return nil if raw.blank?
+
+    value = { 'new' => value_label(field, raw) }
+    value['new_id'] = raw.to_i if USER_FIELDS.include?(field)
+    value
+  end
+
+  # Returns the column names listed by an entry written before 0.9.3.
+  # Returns: Array of String column names as stored (comma separated in b_details); empty for
+  #          entries with JSON details, blank details and the default texts 'Asset created' /
+  #          'Asset updated' (the latter was written when only bookkeeping columns changed)
+  def legacy_fields
+    return [] if structured_details || b_details.blank? || ['Asset created', 'Asset updated'].include?(b_details)
+
+    b_details.split(',').map(&:strip).reject(&:blank?)
   end
 
   # Parses the JSON details written by record_changes / record_issue_link.

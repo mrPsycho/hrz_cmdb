@@ -167,26 +167,29 @@
               <table class="list ci-history-table">
                 <thead>
                   <tr>
-                    <th><%= l('hrz_cmdb.history.columns.date') %></th>
-                    <th><%= l('hrz_cmdb.history.columns.author') %></th>
+                    <th><%= l('hrz_cmdb.history.columns.date') %> / <%= l('hrz_cmdb.history.columns.author') %></th>
                     <th><%= l('hrz_cmdb.history.columns.action') %></th>
                     <th><%= l('hrz_cmdb.history.columns.details') %></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <% history_rows = ci.history_entries.ordered_by_date.limit(20) %>
+                  <% history_rows = ci.history_entries.ordered_by_date.limit(20).to_a %>
+                  <%# Values that older entries did not store, reconstructed from the current values %>
+                  <% history_inferred = HrzcmCiHistory.inferred_values(ci, history_rows) %>
                   <% if history_rows.any? %>
                     <% history_rows.each do |entry| %>
                       <tr>
-                        <td><%= format_time(entry.created_on) %></td>
-                        <td><%= ci_history_author(entry) %></td>
+                        <td>
+                          <%= format_time(entry.created_on) %>
+                          <span class="ci-history-author"><%= ci_history_author(entry) %></span>
+                        </td>
                         <td><%= ci_history_action_label(entry) %></td>
-                        <td><%= format_ci_history_details(entry) %></td>
+                        <td><%= format_ci_history_details(entry, history_inferred[entry.id]) %></td>
                       </tr>
                     <% end %>
                   <% else %>
                     <tr>
-                      <td colspan="4" class="empty"><%= l('hrz_cmdb.history.empty') %></td>
+                      <td colspan="3" class="empty"><%= l('hrz_cmdb.history.empty') %></td>
                     </tr>
                   <% end %>
                 </tbody>

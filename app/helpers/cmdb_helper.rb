@@ -298,17 +298,22 @@ module CmdbHelper
   # Parameter entry: HrzcmCiHistory instance
   #   * JSON 'changes' entry ..... one line per changed field with old and new value
   #   * JSON 'issue_id' entry .... link to the issue if the current user may see it, else '#id'
-  #   * legacy plain text ........ comma separated column names translated to field labels,
+  #   * legacy plain text ........ one line per listed column: "<label> set to <new>" if the new
+  #                                value could be reconstructed, else "<label> updated";
   #                                'Asset created' / 'Asset updated' give an empty string
+  # Parameter inferred: Hash { column name => { 'new' => String, 'new_id' => Integer } } with
+  #   the values reconstructed for this entry by HrzcmCiHistory.inferred_values; defaults to
+  #   an empty Hash (nothing reconstructed). Stored values always take precedence.
   # Returns: HTML safe String, empty if there is nothing to show
-  def format_ci_history_details(entry)
+  def format_ci_history_details(entry, inferred = {})
     data = entry.structured_details
+    inferred ||= {}
 
     if data.nil?
-      legacy = entry.b_details.to_s
-      return ''.html_safe if legacy.blank? || ['Asset created', 'Asset updated'].include?(legacy)
-
-      return h(legacy.split(',').map { |field| ci_history_field_label(field.strip) }.join(', '))
+      lines = entry.legacy_fields.map do |field|
+        format_ci_history_change({ 'field' => field }.merge(inferred[field] || {}))
+      end
+      return safe_join(lines, tag.br)
     end
 
     if data.key?('issue_id')
@@ -316,7 +321,9 @@ module CmdbHelper
       return issue ? link_to_issue(issue) : h("##{data['issue_id']}")
     end
 
-    lines = Array(data['changes']).map { |change| format_ci_history_change(change) }
+    lines = Array(data['changes']).map do |change|
+      format_ci_history_change((inferred[change['field']] || {}).merge(change))
+    end
     safe_join(lines, tag.br)
   end
 
