@@ -20,8 +20,8 @@
             Translated messages for issue_cis.js are passed in the data-ci-messages attribute. %>
 
 <%# Load the CIs once with their associations to avoid one query per row and column. %>
-<% issue_cis = @issue.project.module_enabled?(:cmdb) ?
-                 @issue.cis.includes(:ci_class, :location, :lifecycle_status, :assigned_user).to_a : [] %>
+<% issue_cis = [] %>
+<% issue_cis = @issue.cis.includes(:ci_class, :location, :lifecycle_status, :assigned_user).to_a if @issue.project.module_enabled?(:cmdb) %>
 <% if @issue.project.module_enabled?(:cmdb) && (issue_cis.any? || @issue.editable?) %>
   <%# Messages shown by issue_cis.js; it has no access to the Redmine translations itself. %>
   <% ci_messages = {
@@ -49,7 +49,7 @@
     <div id="issue-cis-list">
       <%# Always rendered; hidden while empty and shown by issue_cis.js when the first CI is added.
           The columns must match the cells of _ci_row.html.erb. %>
-      <table class="list issue-cis-table"<%= raw(' style="display: none;"') if issue_cis.empty? %>>
+      <table class="list issue-cis-table" style="<%= 'display: none;' if issue_cis.empty? %>">
         <thead>
           <tr>
             <th><%= l(:field_name) %></th>
