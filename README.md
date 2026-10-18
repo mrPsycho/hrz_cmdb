@@ -170,8 +170,10 @@ action and the changes, for example:
 
 So the path of a device (handed out → returned to the admin → kept in storage → handed out
 to a new employee) can be followed. Old and new values are stored as names at the time of
-the change. The text of the comment field is not copied into the history, only the fact that
-it changed. Issues the viewer may not see are shown as a bare number without subject.
+the change. The author and the assigned users are links to the users' profiles (assigned
+users for entries written since 0.9.5). The text of the comment field is not copied into the
+history, only the fact that it changed. Issues the viewer may not see are shown as a bare
+number without subject.
 
 ### Connecting CIs to tickets
 
@@ -287,6 +289,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The latest version can be found here: https://github.com/franz-ap/hrz_cmdb
 
 In case you wonder, why there is a *"hrz"* prefix: To avoid a potential name clash with other CMDBs. You can read it as *"Home-brewed Redmine-add-on Zone"*.
+
+###### Version 0.9.5
+
+Fixes for the *Change history* of a CI:
+
+- Texts no longer run into the neighbouring columns: headers and long user names wrap inside
+  their column.
+- The author is shown with the user's name as a link to the profile instead of the login.
+- Changes of the assigned user link to the profiles of the previous and the new holder.
+  Entries written by earlier versions show the stored names without a link; entries written
+  before 0.9.3 only name the changed field.
 
 ###### Version 0.9.4
 

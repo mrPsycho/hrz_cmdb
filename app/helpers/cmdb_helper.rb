@@ -326,6 +326,7 @@ module CmdbHelper
   #   * only a new value ......................... "<label> set to <new>"
   #   * only an old value ........................ "<label> deleted (<old>)"
   #   * old and new value ........................ "<label> changed from <old> to <new>"
+  #   * 'old_id' / 'new_id' present (user columns) ... the value links to the user's profile
   # Returns: HTML safe String, all values are escaped
   def format_ci_history_change(change)
     label = content_tag(:strong, ci_history_field_label(change['field'].to_s))
@@ -333,8 +334,8 @@ module CmdbHelper
       return l(:text_journal_changed_no_detail, :label => label).html_safe
     end
 
-    old_value = content_tag(:i, change['old']) if change['old'].present?
-    new_value = content_tag(:i, change['new']) if change['new'].present?
+    old_value = ci_history_value(change, 'old')
+    new_value = ci_history_value(change, 'new')
 
     text =
       if old_value && new_value
@@ -347,6 +348,34 @@ module CmdbHelper
         l(:text_journal_changed_no_detail, :label => label)
       end
     text.html_safe
+  end
+
+  # Formats the old or new value of a single field change, in italics.
+  # Parameter change: Hash of one change, see format_ci_history_change
+  # Parameter side: String which value to format
+  #   * 'old' .... value before the change, user ID in 'old_id'
+  #   * 'new' .... value after the change, user ID in 'new_id'
+  # Returns: HTML safe String, nil if the stored value is blank. If a user ID is stored and
+  #          the user still exists, the value is a link to the user's profile showing the
+  #          user's current name (plain name for locked users, see link_to_user); otherwise
+  #          the stored text is shown escaped.
+  def ci_history_value(change, side)
+    return nil if change[side].blank?
+
+    user = User.find_by(:id => change["#{side}_id"]) if change["#{side}_id"].present?
+    content_tag(:i, user ? link_to_user(user) : change[side])
+  end
+
+  # Returns the author of a CI history entry for the history table.
+  # Parameter entry: HrzcmCiHistory instance
+  #   * creator set ............. creator of the entry
+  #   * only updater set ........ updater of the entry (entries without created_by)
+  #   * neither set / deleted ... translated 'Unknown'
+  # Returns: HTML safe String, a link to the user's profile showing the user's name
+  #          (plain name for locked users, see link_to_user)
+  def ci_history_author(entry)
+    author = entry.creator || entry.updater
+    author ? link_to_user(author) : l('hrz_cmdb.history.unknown_author')
   end
 
   # Returns the translated label of a hrzcm_ci column.

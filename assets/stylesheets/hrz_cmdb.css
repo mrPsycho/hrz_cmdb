@@ -185,38 +185,40 @@
   table-layout: fixed;
 }
 
-.ci-history-table th,
-.ci-history-table td {
+table.list.ci-history-table th,
+table.list.ci-history-table td {
   padding: 6px 8px;
   border: 1px solid #d7d7d7;
   text-align: left;
   vertical-align: top;
   font-size: 12px;
+  /* Redmine's own "table.list th/td" rules center the cells and keep headers on one line;
+     in the narrow sidebar the texts then ran into the neighbouring columns. The table.list
+     prefix of these selectors outranks those rules: wrap instead, breaking long words
+     (e.g. logins or e-mail addresses) if unavoidable. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-.ci-history-table thead th {
+table.list.ci-history-table thead th {
   background: #f0f0f0;
   font-weight: bold;
 }
 
-.ci-history-table tbody tr:nth-child(even) {
+table.list.ci-history-table tbody tr:nth-child(even) {
   background: #fafafa;
 }
 
-.ci-history-table td.empty {
+table.list.ci-history-table td.empty {
   text-align: center;
   color: #666;
   font-style: italic;
 }
 
 /* Column widths: date, author, action, the remaining space goes to the changes column */
-.ci-history-table th:nth-child(1) { width: 22%; }
-.ci-history-table th:nth-child(2) { width: 15%; }
-.ci-history-table th:nth-child(3) { width: 18%; }
-
-.ci-history-table td:nth-child(4) {
-  overflow-wrap: anywhere;
-}
+table.list.ci-history-table th:nth-child(1) { width: 21%; }
+table.list.ci-history-table th:nth-child(2) { width: 24%; }
+table.list.ci-history-table th:nth-child(3) { width: 19%; }
 
 .form-group {
   margin-bottom: 10px;

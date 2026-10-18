@@ -34,6 +34,9 @@ class HrzcmCiHistory < ActiveRecord::Base
   IGNORED_FIELDS = %w[id created_on updated_on created_by updated_by].freeze
   # Columns that can hold long texts: only the fact that they changed is stored, not the values.
   VALUELESS_FIELDS = %w[b_comment].freeze
+  # Columns holding a Redmine user ID: the raw IDs are stored next to the user names
+  # ('old_id' / 'new_id'), so that the history can link to the user's profile.
+  USER_FIELDS = %w[j_assigned_user_id].freeze
   # Maximum number of characters stored for a single old or new value.
   MAX_VALUE_LENGTH = 255
 
@@ -68,7 +71,8 @@ class HrzcmCiHistory < ActiveRecord::Base
   # Stores the creation or an update of a CI together with the changed values.
   # The values of foreign keys are stored as display names (user name, location, ...) as they
   # are at the time of the change, so the entry stays readable when the referenced record is
-  # renamed or deleted later on.
+  # renamed or deleted later on. For USER_FIELDS the raw user IDs are stored as well
+  # ('old_id' / 'new_id'), so that the history can link to the user's profile.
   # Parameter ci: HrzcmCi instance being recorded
   # Parameter changes: Hash of column name => [old_value, new_value], usually ci.saved_changes
   # Parameter action: String action to store
@@ -84,6 +88,10 @@ class HrzcmCiHistory < ActiveRecord::Base
       unless VALUELESS_FIELDS.include?(field)
         entry['old'] = value_label(field, old_value) unless action == ACTION_CREATED
         entry['new'] = value_label(field, new_value)
+      end
+      if USER_FIELDS.include?(field)
+        entry['old_id'] = old_value.to_i if old_value.present? && action != ACTION_CREATED
+        entry['new_id'] = new_value.to_i if new_value.present?
       end
       entry
     end
@@ -131,7 +139,9 @@ class HrzcmCiHistory < ActiveRecord::Base
   # Parses the JSON details written by record_changes / record_issue_link.
   # Returns: Hash with either
   #   * 'changes' => Array of { 'field' => column, 'old' => String/nil, 'new' => String/nil },
-  #                  'old'/'new' are missing for VALUELESS_FIELDS and 'old' for created entries
+  #                  'old'/'new' are missing for VALUELESS_FIELDS and 'old' for created entries;
+  #                  USER_FIELDS additionally carry 'old_id' / 'new_id' (Integer user IDs,
+  #                  only in entries written since 0.9.5)
   #   * 'issue_id' => Integer ID of the linked/unlinked issue
   #   or nil for entries written before 0.9.3, whose b_details is plain text
   def structured_details

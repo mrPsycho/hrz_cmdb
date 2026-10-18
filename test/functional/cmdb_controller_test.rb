@@ -98,6 +98,22 @@ class CmdbControllerTest < ActionController::TestCase
     assert_response :success
   end
 
+  test "ci history should link the author and the assigned users to their profiles" do
+    User.current = @admin
+    HrzcmCi.find(1).update!(j_assigned_user_id: 3)
+    User.current = nil
+
+    @request.session[:user_id] = @admin.id
+    get :show_ci, params: { id: 1 }, format: :html
+    assert_response :success
+
+    assert_select 'table.ci-history-table tbody tr:first-child' do
+      assert_select 'td:nth-child(2) a[href=?]', '/users/1', :text => @admin.name
+      assert_select 'td:nth-child(4) a[href=?]', '/users/3', :text => User.find(3).name
+    end
+    assert_select 'table.ci-history-table td', :text => @admin.login, :count => 0
+  end
+
   test "should create ci with edit permission" do
     @request.session[:user_id] = @user_with_edit.id
 

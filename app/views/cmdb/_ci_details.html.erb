@@ -179,7 +179,7 @@
                     <% history_rows.each do |entry| %>
                       <tr>
                         <td><%= format_time(entry.created_on) %></td>
-                        <td><%= entry.creator&.login || entry.updater&.login || l('hrz_cmdb.history.unknown_author') %></td>
+                        <td><%= ci_history_author(entry) %></td>
                         <td><%= ci_history_action_label(entry) %></td>
                         <td><%= format_ci_history_details(entry) %></td>
                       </tr>

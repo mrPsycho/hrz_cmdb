@@ -86,7 +86,8 @@ class HrzcmCiHistoryTest < ActiveSupport::TestCase
     ci.update!(j_assigned_user_id: 3, j_location_id: 4)
 
     details = latest_details(ci)
-    assert_equal({ 'field' => 'j_assigned_user_id', 'old' => User.find(2).name, 'new' => User.find(3).name },
+    assert_equal({ 'field' => 'j_assigned_user_id', 'old' => User.find(2).name, 'new' => User.find(3).name,
+                   'old_id' => 2, 'new_id' => 3 },
                  change_for(details, 'j_assigned_user_id'))
     assert_equal({ 'field' => 'j_location_id',
                    'old' => HrzcmLocation.find(3).display_name,
@@ -101,7 +102,26 @@ class HrzcmCiHistoryTest < ActiveSupport::TestCase
 
     change = change_for(latest_details(ci), 'j_assigned_user_id')
     assert_equal User.find(2).name, change['old']
+    assert_equal 2, change['old_id']
     assert_nil change['new']
+    assert_not change.key?('new_id'), 'no user id is stored for a removed holder'
+  end
+
+  test "creating a ci should store the id of the assigned user" do
+    ci = HrzcmCi.create!(b_name_abbr: 'NB02', j_ci_class_id: 2, j_location_id: 3, j_assigned_user_id: 2)
+    change = change_for(ci.history_entries.first.structured_details, 'j_assigned_user_id')
+
+    assert_equal 2, change['new_id']
+    assert_not change.key?('old_id'), 'created entries have no old value'
+  end
+
+  test "only user columns should store ids next to their values" do
+    ci = HrzcmCi.find(1)
+    ci.update!(j_location_id: 4)
+
+    change = change_for(latest_details(ci), 'j_location_id')
+    assert_not change.key?('old_id')
+    assert_not change.key?('new_id')
   end
 
   test "saving without real changes should not record an entry" do

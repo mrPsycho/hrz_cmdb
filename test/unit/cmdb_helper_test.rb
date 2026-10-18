@@ -14,7 +14,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.                    #
 #-------------------------------------------------------------------------------------eohdr-#
 # Purpose: Unit tests for the CI change history helpers in CmdbHelper (action labels and the
-#          formatting of stored changes, issue links and legacy entries).
+#          formatting of stored changes, issue links and legacy entries, profile links of
+#          assigned users and history authors).
 
 require File.expand_path('../../test_helper', __FILE__)
 
@@ -116,5 +117,58 @@ class CmdbHelperTest < Redmine::HelperTest
   test "ci_history_field_label should keep unknown column names" do
     assert_equal 'Location', ci_history_field_label('j_location_id')
     assert_equal 'no_such_column', ci_history_field_label('no_such_column')
+  end
+
+  test "format_ci_history_details should link assigned users to their profiles" do
+    entry = history_entry('updated', 'changes' => [
+      { 'field' => 'j_assigned_user_id', 'old' => 'Old name', 'new' => 'Dave Lopper',
+        'old_id' => 2, 'new_id' => 3 }
+    ])
+    html = format_ci_history_details(entry)
+
+    assert html.html_safe?
+    assert_includes html, '<strong>Assigned user</strong> changed from <i><a '
+    assert_includes html, 'href="/users/2"'
+    assert_includes html, 'href="/users/3"'
+    assert_includes html, 'John Smith', 'the link shows the current name of the user'
+  end
+
+  test "format_ci_history_details should show the stored name of a deleted assigned user" do
+    entry = history_entry('updated', 'changes' => [
+      { 'field' => 'j_assigned_user_id', 'old' => '<b>Gone</b>', 'new' => nil, 'old_id' => 999_999 }
+    ])
+    assert_equal '<strong>Assigned user</strong> deleted (<i>&lt;b&gt;Gone&lt;/b&gt;</i>)',
+                 format_ci_history_details(entry)
+  end
+
+  test "ci_history_value should not link a locked user for a non-admin" do
+    User.current = User.anonymous
+    html = ci_history_value({ 'new' => 'Dave2 Lopper2', 'new_id' => 5 }, 'new')
+
+    assert_not_includes html, 'href='
+    assert_includes html, 'Dave2 Lopper2'
+  end
+
+  test "ci_history_value should return nil for a blank value" do
+    assert_nil ci_history_value({ 'old' => nil, 'old_id' => 2 }, 'old')
+    assert_nil ci_history_value({}, 'new')
+  end
+
+  test "ci_history_author should link the creator to the user profile" do
+    entry = history_entry('updated', nil)
+    entry.created_by = 2
+    html = ci_history_author(entry)
+
+    assert_includes html, 'href="/users/2"'
+    assert_includes html, 'John Smith'
+    assert_not_includes html, 'jsmith', 'the login is not shown'
+  end
+
+  test "ci_history_author should fall back to the updater and to unknown" do
+    entry = history_entry('updated', nil)
+    entry.updated_by = 3
+    assert_includes ci_history_author(entry), 'href="/users/3"'
+
+    assert_equal 'Unknown', ci_history_author(history_entry('updated', nil))
   end
 end
